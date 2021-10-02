@@ -9,21 +9,21 @@ class Block(models.Model):
 
     hash = models.CharField(max_length=64, unique=True)
 
-    # data = models.JSONField()
-
-    @property    
-    def data(self):
-        if not hasattr(self, '__data'):
-            self.__data = bitcoinrpcservice.get_block(self.hash)
-        return self.__data
+    # Linked list of blocks 
+    last = models.OneToOneField('Block', related_name='next', on_delete=models.SET_NULL, null=True)
 
     transactions_created = models.BooleanField(default=False)
 
+    @property    
+    def data(self):
+        if not hasattr(self, '__data') or self.__data is None:
+            self.__data = bitcoinrpcservice.get_block(self.hash)
+        return self.__data    
+
     def __str__(self):
-        return f'<Block: {self.data["height"]}>'
+        return f'<Block: {self.height}>'
 
     class Meta:
-
         db_table = 'block'
 
 

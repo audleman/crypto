@@ -1,4 +1,6 @@
-psycopg2
 django-extensions
+ipdb
+ipython
+psycopg2
 python-bitcoinrpc
-django-tables2
+retry
