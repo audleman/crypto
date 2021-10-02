@@ -35,8 +35,7 @@ class Command(BaseCommand):
             raw_block = bitcoinrpcservice.get_block(block_hash)
             block = Block.objects.create(
                 height=raw_block['height'],
-                hash=raw_block['hash'],
-                data=raw_block)
+                hash=raw_block['hash'])
             print(f'{block} added with hash: {block.hash}')
             # pp(raw_block)
 

@@ -5,6 +5,7 @@ running bitcoin node
 import configparser
 
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
+from pprint import pprint as pp
 
 BITCOIN_CONF_LOCATION = '/media/btcdisk/bitcoin.conf'
 RPC_NODE_IP = '127.0.0.1'
@@ -35,3 +36,12 @@ def get_block(block_hash):
     block['difficulty'] = float(block['difficulty'])
 
     return block
+
+
+def get_transaction(txid, block_hash):
+
+    trans = client.getrawtransaction(txid, True, block_hash)
+
+    # No cleaning necessary?
+
+    return trans
