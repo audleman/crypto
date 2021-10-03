@@ -28,26 +28,22 @@ def build_rpc_client():
 
 client = build_rpc_client()
 
+
 @retry(tries=3)
 def get_block_hash(block_height):
-
     return client.getblockhash(block_height)
+
 
 @retry(tries=3)
 def get_block(block_hash):
-
     block = client.getblock(block_hash)
-
     # Cleaning
     block['difficulty'] = float(block['difficulty'])
-
     return block
+
 
 @retry(tries=3)
 def get_transaction(txid, block_hash):
-
     trans = client.getrawtransaction(txid, True, block_hash)
-
     # No cleaning necessary?
-
     return trans
