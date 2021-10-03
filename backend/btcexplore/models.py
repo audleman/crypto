@@ -9,6 +9,8 @@ class Block(models.Model):
 
     hash = models.CharField(max_length=64, unique=True)
 
+    time = models.DateTimeField(null=True)
+
     # Linked list of blocks 
     last = models.OneToOneField('Block', related_name='next', on_delete=models.SET_NULL, null=True)
 
@@ -18,10 +20,18 @@ class Block(models.Model):
     def data(self):
         if not hasattr(self, '__data') or self.__data is None:
             self.__data = bitcoinrpcservice.get_block(self.hash)
-        return self.__data    
+        return self.__data
+
+    
+    def get_data(self, verbosity=1):
+        return bitcoinrpcservice.get_block(self.hash, verbosity)
+
+    def get_extended_data(self):
+        return self.get_data(2)
 
     def __str__(self):
         return f'<Block: {self.height}>'
+
 
     class Meta:
         db_table = 'block'

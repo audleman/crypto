@@ -14,12 +14,9 @@ class Command(BaseCommand):
         blocks = Block.objects.all()
     
         count = 0
-        for block in blocks:
-            tx_ids = block.data['tx']
-            if len(tx_ids) != block.transactions.all().count():
-                import ipdb; ipdb.set_trace()
-            count += 1
-            if count % 10000 == 0:
-                print(count)
+        # unspent = bitcoinrpcservice.client.listunspent()
+        b0 = Block.objects.get(height=0)
+        b1 = Block.objects.get(height=1)
+        import ipdb; ipdb.set_trace()
             
                     

@@ -35,8 +35,8 @@ def get_block_hash(block_height):
 
 
 @retry(tries=3)
-def get_block(block_hash):
-    block = client.getblock(block_hash)
+def get_block(block_hash, verbosity=1):
+    block = client.getblock(block_hash, verbosity)
     # Cleaning
     block['difficulty'] = float(block['difficulty'])
     return block

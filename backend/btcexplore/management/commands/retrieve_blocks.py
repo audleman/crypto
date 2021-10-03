@@ -4,9 +4,11 @@ from btcexplore.models import Block
 from pprint import pprint as pp
 from btcexplore.services import bitcoinrpcservice
 from django.db import transaction
+from datetime import datetime
 import time
+import pytz
 
-
+timezone = pytz.timezone("UTC")
 BATCH_SIZE = 2000
 
 class Command(BaseCommand):
@@ -49,7 +51,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        # Block.objects.all().delete()
+        Block.objects.all().delete()
 
         if Block.objects.count() == 0:
             self.add_genesis_block()
@@ -60,7 +62,7 @@ class Command(BaseCommand):
         # the next block hash
         last_block = Block.objects.last()
         if last_block.height == block_tip:
-            print(f'{last_block} is at the tip')
+            print(f'{last_block} already at the tip')
             return
 
         batch_count = 1
@@ -77,22 +79,22 @@ class Command(BaseCommand):
                 ['getblockhash', height] 
                 for height in range(start_block, end_block + 1)]
             block_hashes = bitcoinrpcservice.client.batch_(commands)
-            raw_blocks = bitcoinrpcservice.client.batch_(
-                [["getblock", h] for h in block_hashes])
-            print(f'    {len(commands)} RPC calls in {(time.time() - start):.4f}s')
+            raw_blocks = bitcoinrpcservice.client.batch_([["getblock", h] for h in block_hashes])
+            print(f'    {len(commands)} batched RPC calls in {(time.time() - start):.4f}s')
             
-            # Create unsaved Blocks
+            # Create blocks in memory only
             block_batch = []
             for raw_block in raw_blocks:
                 block_batch.append(Block(
                     height=raw_block['height'],
-                    hash=raw_block['hash']))
+                    hash=raw_block['hash'],
+                    time=timezone.localize(datetime.fromtimestamp(raw_block['time']))))
 
             created_blocks = self.create_block_batch(block_batch, last_block)
 
             # stats
             batch_count += 1
-            print(f'    added blocks {start_block} - {end_block}')
+            print(f'    added {end_block - start_block} blocks {start_block} - {end_block}')
 
             # Loop control            
             last_block = created_blocks[-1]
