@@ -51,7 +51,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        Block.objects.all().delete()
+        # Block.objects.all().delete()
 
         if Block.objects.count() == 0:
             self.add_genesis_block()
