@@ -38,19 +38,6 @@ class Block(models.Model):
         db_table = 'block'
 
 
-class VoutDecoder(JSONDecoder):
-    """
-    Manual hack to decode decimal fields for vout only. 
-
-    TODO: learn how to use json decoders properly!
-    """
-    def decode(self, s):
-        out = super().decode(s)
-        for v in out:
-            v['value'] = Decimal(v['value'])
-        return out
-
-
 class Transaction(models.Model):
 
     # Non-unique
@@ -62,6 +49,19 @@ class Transaction(models.Model):
     block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name='transactions')
 
     vin = models.JSONField(encoder=DjangoJSONEncoder)
+
+    class VoutDecoder(JSONDecoder):
+    """
+    Lame hack to decode decimal fields for a transaction's vout list
+
+    TODO: learn how to use json decoders properly!
+    """
+
+    def decode(self, s):
+        out = super().decode(s)
+        for v in out:
+            v['value'] = Decimal(v['value'])
+        return out
 
     vout = models.JSONField(encoder=DjangoJSONEncoder, decoder=VoutDecoder)
 
