@@ -51,17 +51,15 @@ class Transaction(models.Model):
     vin = models.JSONField(encoder=DjangoJSONEncoder)
 
     class VoutDecoder(JSONDecoder):
-    """
-    Lame hack to decode decimal fields for a transaction's vout list
-
-    TODO: learn how to use json decoders properly!
-    """
-
-    def decode(self, s):
-        out = super().decode(s)
-        for v in out:
-            v['value'] = Decimal(v['value'])
-        return out
+        """
+        Lame hack to decode decimal fields for a transaction's vout list
+        TODO: learn how to use json decoders properly!
+        """
+        def decode(self, s):
+            out = super().decode(s)
+            for v in out:
+                v['value'] = Decimal(v['value'])
+            return out
 
     vout = models.JSONField(encoder=DjangoJSONEncoder, decoder=VoutDecoder)
 
