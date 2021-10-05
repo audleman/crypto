@@ -3,6 +3,7 @@ from btcexplore.services import bitcoinrpcservice
 from django.core.serializers.json import DjangoJSONEncoder
 from json import JSONDecoder
 from decimal import Decimal
+from django.utils import timezone
 
 
 class Block(models.Model):
@@ -32,7 +33,7 @@ class Block(models.Model):
         return bitcoinrpcservice.get_block(self.hash, verbosity)
 
     def __str__(self):
-        return f'Block: {self.height} {self.time:%Y-%m-%d %H:%M}'
+        return f'Block: {self.height} {timezone.localtime(self.time):%Y-%m-%d %H:%M}'
 
     class Meta:
         db_table = 'block'

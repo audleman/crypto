@@ -4,3 +4,4 @@ ipython
 psycopg2
 python-bitcoinrpc
 retry
+base58

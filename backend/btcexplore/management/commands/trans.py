@@ -1,15 +1,14 @@
 
 from django.core.management.base import BaseCommand, CommandError
+import ipdb
 from btcexplore.models import Block, Transaction
-from pprint import pprint as pp
-from btcexplore.services import bitcoinrpcservice
-from django.core.paginator import Paginator
-from django.db import transaction
-from collections import defaultdict
+
+from btcexplore.utils.address_conversion import address_from_public_key
 
 
 class Command(BaseCommand):
     help = 'Process transactions'
+
 
     def process_vin(self, block, transaction):
         print(f'    vins: {len(transaction.vin)}')
@@ -18,14 +17,22 @@ class Command(BaseCommand):
                 print(f'        vin {i} coinbase')
 
 
+    def process_vout(self, block, transaction):
+        print(f'    vouts: {len(transaction.vout)}')
+        for vout in transaction.vout:
+            if vout['scriptPubKey']['type'] == 'pubkey':
+                address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])                
+                print(f'    value: {vout["value"]} to address: {address}')
+
 
     def handle(self, *args, **options):
 
-        tt = Transaction.objects.all()[0]
         # Start with a clean slate 
         Transaction.objects.all().delete()
 
         for block in Block.objects.filter(transactions_created=False).order_by('height')[0:5]:
+
+            print(f'{block}\n----------------------------------------------------------------')
             for tx in block.extended_data['tx']:
                 
                 transaction = Transaction.objects.create(
@@ -39,6 +46,10 @@ class Command(BaseCommand):
                 # import ipdb; ipdb.set_trace()
 
                 self.process_vin(block, transaction)
+
+                self.process_vout(block, transaction)
+
+                print ('')
 
                 # Iterate 'vin' and process 
                 #   - Mark Utxo's as spent
