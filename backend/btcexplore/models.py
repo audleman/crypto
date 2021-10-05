@@ -45,8 +45,6 @@ class Transaction(models.Model):
     # https://bitcoin.stackexchange.com/questions/11999/can-the-outputs-of-transactions-with-duplicate-hashes-be-spent
     txid = models.CharField(max_length=64)
 
-    hash = models.CharField(max_length=64)
-
     block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name='transactions')
 
     vin = models.JSONField(encoder=DjangoJSONEncoder)
@@ -72,15 +70,24 @@ class Transaction(models.Model):
         db_table = 'transaction'
 
 
-class Wallet(models.Model):
+# class Wallet(models.Model):
 
-    address = models.CharField(max_length=64)
+#     # Addresses are only 26-35 chars long, but pad for future-proofing
+#     address = models.CharField(max_length=64, unique=True)
 
-    balance = models.DecimalField(max_digits=15, decimal_places=8)
+#     balance = models.DecimalField(max_digits=15, decimal_places=8)
+
+#     transaction_count = models.IntegerField()
+
+#     total_received = models.DecimalField(max_digits=15, decimal_places=8)
+
+#     total_sent = models.DecimalField(max_digits=15, decimal_places=8)
+
+#     balance = models.DecimalField(max_digits=15, decimal_places=8)
 
 
-class Utxo(models.Model):
+# class Utxo(models.Model):
 
-    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+#     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
 
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+#     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)

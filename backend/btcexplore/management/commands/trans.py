@@ -21,7 +21,8 @@ class Command(BaseCommand):
         print(f'    vouts: {len(transaction.vout)}')
         for vout in transaction.vout:
             if vout['scriptPubKey']['type'] == 'pubkey':
-                address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])                
+                import ipdb; ipdb.set_trace()
+                address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])
                 print(f'    value: {vout["value"]} to address: {address}')
 
 
@@ -36,14 +37,12 @@ class Command(BaseCommand):
             for tx in block.extended_data['tx']:
                 
                 transaction = Transaction.objects.create(
-                    block=block,
                     txid=tx['txid'],
-                    hash=tx['hash'],
+                    block=block,
                     vin=tx['vin'],
-                    vout=tx['vout']
-                )
+                    vout=tx['vout'])
+
                 print(transaction)
-                # import ipdb; ipdb.set_trace()
 
                 self.process_vin(block, transaction)
 
