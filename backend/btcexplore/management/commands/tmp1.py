@@ -11,12 +11,17 @@ class Command(BaseCommand):
     help = 'Query bitcoin node for new blocks'
 
     def handle(self, *args, **options):
-        blocks = Block.objects.all()
-    
-        count = 0
-        # unspent = bitcoinrpcservice.client.listunspent()
-        b0 = Block.objects.get(height=0)
-        b1 = Block.objects.get(height=1)
-        import ipdb; ipdb.set_trace()
+        types = defaultdict(int)
+        for block in Block.objects.all().order_by('height'):
+            for tx in block.extended_data['tx']:
+                for vout in tx['vout']:
+                    try:
+                        types[vout['scriptPubKey']['type']] += 1
+                    except Exception as e:
+                        import ipdb; ipdb.set_trace()
+                        print('no type')
+            if block.height % 100 == 0:
+                print(types)
+            
             
                     

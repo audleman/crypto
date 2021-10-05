@@ -9,7 +9,7 @@ import time
 import pytz
 
 timezone = pytz.timezone("UTC")
-BATCH_SIZE = 2000
+BATCH_SIZE = 1000
 
 class Command(BaseCommand):
     help = 'Query bitcoin node for new blocks'
@@ -25,7 +25,8 @@ class Command(BaseCommand):
         raw_block = bitcoinrpcservice.get_block(block_hash)
         block = Block.objects.create(
                 height=raw_block['height'],
-                hash=raw_block['hash'])
+                hash=raw_block['hash'],
+                time=timezone.localize(datetime.fromtimestamp(raw_block['time'])))
 
 
     def create_block_batch(self, block_batch, last_block):
@@ -69,7 +70,7 @@ class Command(BaseCommand):
     
         while True:
 
-            print(f'Batch {batch_count}')
+            print(f'Batch {batch_count} starting at {last_block}')
 
             # Batch fetch blocks via RPC
             start = time.time()
