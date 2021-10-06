@@ -26,7 +26,7 @@ def address_from_public_key(pub_key):
     # 2 - RIPEMD-160 of 1
     ripe = hashlib.new('ripemd160', sha).hexdigest()
 
-    # 3 - Add network bytes to 2
+    # 3 - Add network version to 2
     key_hash = f'{VERSION}{ripe}'
 
     # 4 - Double SHA-256 of 3 to generate checksum

@@ -3,27 +3,13 @@ from django.core.management.base import BaseCommand, CommandError
 import ipdb
 from btcexplore.models import Block, Transaction
 
-from btcexplore.utils.address_conversion import address_from_public_key
+
 
 
 class Command(BaseCommand):
     help = 'Process transactions'
 
-
-    def process_vin(self, block, transaction):
-        print(f'    vins: {len(transaction.vin)}')
-        for i, vin in enumerate(transaction.vin):
-            if 'coinbase' in vin.keys():
-                print(f'        vin {i} coinbase')
-
-
-    def process_vout(self, block, transaction):
-        print(f'    vouts: {len(transaction.vout)}')
-        for vout in transaction.vout:
-            if vout['scriptPubKey']['type'] == 'pubkey':
-                import ipdb; ipdb.set_trace()
-                address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])
-                print(f'    value: {vout["value"]} to address: {address}')
+    
 
 
     def handle(self, *args, **options):
@@ -44,7 +30,7 @@ class Command(BaseCommand):
 
                 print(transaction)
 
-                self.process_vin(block, transaction)
+                transaction.process_vin(block, transaction)
 
                 self.process_vout(block, transaction)
 

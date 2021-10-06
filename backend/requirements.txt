@@ -5,3 +5,5 @@ psycopg2
 python-bitcoinrpc
 retry
 base58
+factory_boy
+jsonschema

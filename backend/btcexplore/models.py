@@ -1,9 +1,12 @@
 from django.db import models
-from btcexplore.services import bitcoinrpcservice
+from btcexplore.services import bitcoinrpc
 from django.core.serializers.json import DjangoJSONEncoder
 from json import JSONDecoder
 from decimal import Decimal
 from django.utils import timezone
+
+
+GENESIS_TIME = '2009-01-03 10:15:05Z'
 
 
 class Block(models.Model):
@@ -30,13 +33,10 @@ class Block(models.Model):
         return self.get_data(2)
 
     def get_data(self, verbosity=1):
-        return bitcoinrpcservice.get_block(self.hash, verbosity)
+        return bitcoinrpc.get_block(self.hash, verbosity)
 
     def __str__(self):
         return f'Block: {self.height} {timezone.localtime(self.time):%Y-%m-%d %H:%M}'
-
-    class Meta:
-        db_table = 'block'
 
 
 class Transaction(models.Model):
@@ -65,29 +65,30 @@ class Transaction(models.Model):
     def __str__(self):
         return f'Transaction: {self.txid}'
 
-    class Meta:
-
-        db_table = 'transaction'
-
-
-# class Wallet(models.Model):
-
-#     # Addresses are only 26-35 chars long, but pad for future-proofing
-#     address = models.CharField(max_length=64, unique=True)
-
-#     balance = models.DecimalField(max_digits=15, decimal_places=8)
-
-#     transaction_count = models.IntegerField()
-
-#     total_received = models.DecimalField(max_digits=15, decimal_places=8)
-
-#     total_sent = models.DecimalField(max_digits=15, decimal_places=8)
-
-#     balance = models.DecimalField(max_digits=15, decimal_places=8)
+    def process_vin(self):
+        from btcexplore.services.transaction import process_vin
+        return process_vin(self)
 
 
-# class Utxo(models.Model):
+class Wallet(models.Model):
 
-#     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+    # Addresses are only 26-35 chars long, but pad for future-proofing
+    address = models.CharField(max_length=64, unique=True)
 
-#     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    # balance = models.DecimalField(max_digits=15, decimal_places=8)
+
+    transaction_count = models.IntegerField()
+
+    total_received = models.DecimalField(max_digits=15, decimal_places=8)
+
+    total_sent = models.DecimalField(max_digits=15, decimal_places=8)
+
+
+
+class Utxo(models.Model):
+
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+
+    value = models.DecimalField(max_digits=15, decimal_places=8)

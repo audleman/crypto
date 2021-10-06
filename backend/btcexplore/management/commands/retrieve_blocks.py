@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from btcexplore.models import Block
 from pprint import pprint as pp
-from btcexplore.services import bitcoinrpcservice
+from btcexplore.services import bitcoinrpc
 from django.db import transaction
 from datetime import datetime
 import time
@@ -10,6 +10,7 @@ import pytz
 
 timezone = pytz.timezone("UTC")
 BATCH_SIZE = 1000
+
 
 class Command(BaseCommand):
     help = 'Query bitcoin node for new blocks'
@@ -21,8 +22,8 @@ class Command(BaseCommand):
         """
         Loads the first block from the blockchain into our database
         """
-        block_hash = bitcoinrpcservice.get_block_hash(0)
-        raw_block = bitcoinrpcservice.get_block(block_hash)
+        block_hash = bitcoinrpc.get_block_hash(0)
+        raw_block = bitcoinrpc.get_block(block_hash)
         block = Block.objects.create(
                 height=raw_block['height'],
                 hash=raw_block['hash'],
@@ -57,7 +58,7 @@ class Command(BaseCommand):
         if Block.objects.count() == 0:
             self.add_genesis_block()
 
-        block_tip = bitcoinrpcservice.client.getblockcount()
+        block_tip = bitcoinrpc.client.getblockcount()
 
         # Retrieve last block from db, see if we need to re-read it to get
         # the next block hash
@@ -79,8 +80,8 @@ class Command(BaseCommand):
             commands = [
                 ['getblockhash', height] 
                 for height in range(start_block, end_block + 1)]
-            block_hashes = bitcoinrpcservice.client.batch_(commands)
-            raw_blocks = bitcoinrpcservice.client.batch_([["getblock", h] for h in block_hashes])
+            block_hashes = bitcoinrpc.client.batch_(commands)
+            raw_blocks = bitcoinrpc.client.batch_([["getblock", h] for h in block_hashes])
             print(f'    {len(commands)} batched RPC calls in {(time.time() - start):.4f}s')
             
             # Create blocks in memory only
