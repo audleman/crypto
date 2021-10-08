@@ -29,7 +29,7 @@ def address_from_public_key(pub_key):
     # 3 - Add network version to 2
     key_hash = f'{VERSION}{ripe}'
 
-    # 4 - Double SHA-256 of 3 to generate checksum
+    # 4 - Double SHA-256 of 3 to generate 8-digit checksum
     checksum = hashlib.sha256(bytearray.fromhex(key_hash)).digest()
     checksum = hashlib.sha256(checksum).hexdigest()[0:8]
 

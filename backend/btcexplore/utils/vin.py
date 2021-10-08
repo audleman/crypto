@@ -42,7 +42,7 @@ SCHEMAS = {
 }
 
 
-class UnknownVoutSchema(Exception):
+class UnknownVinSchema(Exception):
     pass
 
 
@@ -51,6 +51,6 @@ def get_vin_type(instance):
         try:
             validate(instance, schema)
             return schema_type
-        except UnknownVoutSchema:
+        except ValidationError:
             pass
-    raise Exception(instance)
+    raise UnknownVinSchema(instance)

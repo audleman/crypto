@@ -3,9 +3,10 @@ Utilities for working with the `vout` section of a Transaction
 """
 from jsonschema import validate, ValidationError
 from enum import Enum
+from django.db import models
 
 
-class VoutType(Enum):
+class VoutType(models.TextChoices):
     PUBKEY = 1
     PUBKEYHASH = 2
     NONSTANDARD = 3

@@ -4,6 +4,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from json import JSONDecoder
 from decimal import Decimal
 from django.utils import timezone
+from btcexplore.utils.vout import VoutType
+from django.db.models import Sum
 
 
 GENESIS_TIME = '2009-01-03 10:15:05Z'
@@ -20,7 +22,7 @@ class Block(models.Model):
     # Linked list of blocks 
     last = models.OneToOneField('Block', related_name='next', on_delete=models.SET_NULL, null=True)
 
-    transactions_created = models.BooleanField(default=False)
+    processed = models.BooleanField(default=False)
 
     @property    
     def data(self):
@@ -41,13 +43,9 @@ class Block(models.Model):
 
 class Transaction(models.Model):
 
-    # Non-unique
-    # https://bitcoin.stackexchange.com/questions/11999/can-the-outputs-of-transactions-with-duplicate-hashes-be-spent
-    txid = models.CharField(max_length=64)
+    txid = models.CharField(max_length=64, unique=True)
 
-    block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name='transactions')
-
-    vin = models.JSONField(encoder=DjangoJSONEncoder)
+    block = models.ForeignKey(Block, on_delete=models.CASCADE)
 
     class VoutDecoder(JSONDecoder):
         """
@@ -60,14 +58,12 @@ class Transaction(models.Model):
                 v['value'] = Decimal(v['value'])
             return out
 
-    vout = models.JSONField(encoder=DjangoJSONEncoder, decoder=VoutDecoder)
+    # vin = models.JSONField(encoder=DjangoJSONEncoder)
+    # vout = models.JSONField(encoder=DjangoJSONEncoder, decoder=VoutDecoder)
 
     def __str__(self):
         return f'Transaction: {self.txid}'
 
-    def process_vin(self):
-        from btcexplore.services.transaction import process_vin
-        return process_vin(self)
 
 
 class Wallet(models.Model):
@@ -75,20 +71,41 @@ class Wallet(models.Model):
     # Addresses are only 26-35 chars long, but pad for future-proofing
     address = models.CharField(max_length=64, unique=True)
 
-    # balance = models.DecimalField(max_digits=15, decimal_places=8)
+    # balance = models.DecimalField(max_digits=15, decimal_places=8, default=0)
+    # tx_count = models.IntegerField(default=0)
+    # total_received = models.DecimalField(max_digits=15, decimal_places=8, default=0)
+    # total_sent = models.DecimalField(max_digits=15, decimal_places=8, default=0)
 
-    transaction_count = models.IntegerField()
+    def __str__(self):
+        # return f'Wallet: {self.address} bal: {self.balance} tx_count: {self.tx_count} recvd: {self.total_received} sent: {self.total_sent}'
+        return f'Wallet: {self.address}'
 
-    total_received = models.DecimalField(max_digits=15, decimal_places=8)
-
-    total_sent = models.DecimalField(max_digits=15, decimal_places=8)
-
+    def get_balance(self):
+        """ Balance is sum of unspent Utxos"""
+        return self.utxo_set.filter(spent__isnull=True).aggregate(Sum('value'))['value__sum']
 
 
 class Utxo(models.Model):
 
-    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+    # Concat: transaction_id + vout position. Should be 64 + 1-2 digits. Leaving 5 just in case
+    id = models.CharField(max_length=70, primary_key=True)
+
+    # Accounting, will eventually delete tx in/out
+    tx_in = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='utxo_created_set')
+
+    tx_out = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='utxo_spent_set', null=True)
 
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
 
+    # might be relevant when dealing w/ multisig
+    type = models.PositiveSmallIntegerField(choices=VoutType.choices)
+
     value = models.DecimalField(max_digits=15, decimal_places=8)
+
+    created = models.DateTimeField()
+
+    spent = models.DateTimeField(null=True)
+
+    def __str__(self):
+        is_spent = '[SPENT]' if self.spent is not None else ''
+        return f'Utxo: {self.id} {self.value} {is_spent}'

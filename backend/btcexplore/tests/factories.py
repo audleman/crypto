@@ -29,7 +29,6 @@ class BlockFactory(factory.django.DjangoModelFactory):
 class VinCoinbaseFactory(factory.DictFactory):
     """
     Vin that comes from a coinbase, new coins issued to the block miner
-
     {
         'coinbase': '04ffff001d02f400', 
         'sequence': 4294967295
@@ -42,7 +41,6 @@ class VinCoinbaseFactory(factory.DictFactory):
 class VinTxOutFactory(factory.DictFactory):
     """
     A vin that points to the vout from a previous transaction. 
-
     {
         'scriptSig': {
             'asm': '304402204e45e16932b8af514961a1d3a1a25fdf3f4f7732e9d624c6c61548ab5fb8cd410220181522ec8eca07de4860a4acdd12909d831cc56cbbac4622082221a8768d1d09[ALL]',
@@ -64,8 +62,8 @@ class VinTxOutFactory(factory.DictFactory):
 class VoutPubkeyFactory(factory.DictFactory):
     """
     {
-        'n': 0,
         'value': Decimal('50.00000000'),
+        'n': 0,
         'scriptPubKey': {
             'asm': '04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f '
                    'OP_CHECKSIG',
@@ -84,16 +82,17 @@ class VoutPubkeyFactory(factory.DictFactory):
 class VoutPubkeyhashFactory(factory.DictFactory):
     """
     {
+        'value': Decimal('100.00000000')
         'n': 0,
         'scriptPubKey': {
             'addresses': ['12higDjoCCNXSA95xZMWUdPvXNmkAduhWv'],
             'asm': 'OP_DUP OP_HASH160 '
-                    '12ab8dc588ca9d5787dde7eb29569da63c3a238c '
-                    'OP_EQUALVERIFY OP_CHECKSIG',
+                   '12ab8dc588ca9d5787dde7eb29569da63c3a238c '
+                   'OP_EQUALVERIFY OP_CHECKSIG',
             'hex': '76a91412ab8dc588ca9d5787dde7eb29569da63c3a238c88ac',
             'reqSigs': 1,
             'type': 'pubkeyhash'},
-        'value': Decimal('100.00000000')
+        
     }
     """
     n = 0
