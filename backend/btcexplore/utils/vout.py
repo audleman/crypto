@@ -68,8 +68,8 @@ SCHEMAS = {
                     'hex': {'type': 'string'},
                     'type': {'type': 'string', 'pattern': 'nonstandard'}
                 },
-                'required': ['asm', 'hex', 'type'],
-                'additionalProperties': False
+                'required': ['type'],
+                'additionalProperties': True
             },
             'value': {'type': 'number'}
         },

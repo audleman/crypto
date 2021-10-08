@@ -95,14 +95,15 @@ class Utxo(models.Model):
 
     tx_out = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='utxo_spent_set', null=True)
 
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    # null=True for nonstandard transactions
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, null=True)
 
     # might be relevant when dealing w/ multisig
     type = models.PositiveSmallIntegerField(choices=VoutType.choices)
 
     value = models.DecimalField(max_digits=15, decimal_places=8)
 
-    created = models.DateTimeField()
+    created = models.DateTimeField(db_index=True)
 
     spent = models.DateTimeField(null=True)
 

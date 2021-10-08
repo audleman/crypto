@@ -2,7 +2,6 @@
 Methods/utilities for processing Transactions
 
 """
-
 from btcexplore.models import Transaction, Block, Wallet, Utxo
 from btcexplore.utils.address_conversion import address_from_public_key
 from btcexplore.utils.vin import get_vin_type, VinType, UnknownVinSchema
@@ -45,30 +44,37 @@ def process_vin(transaction: Transaction, vin_set: dict):
     Finds the associated UTXOs, deletes them, and records that they're spend
     on their transaction
     """
+    total = 0
     for i, vin in enumerate(vin_set):
         vin_type = get_vin_type(vin)
         if vin_type == VinType.COINBASE:
             print(f'        vin {i} (coinbase)')
         elif vin_type == VinType.TXOUT:
             utxo = Utxo.objects.get(id=f'{vin["txid"]}-{vin["vout"]}')
+            if utxo.type == 3:
+                print('Spent nonstandard utxo!')
+                import ipdb; ipdb.set_trace()
             utxo.spent = transaction.block.time
             utxo.tx_out = transaction
             utxo.save()
+            total += utxo.value
             print(f'        vin {i} {utxo}')
         else:
             raise UnknownVinSchema(vin_type)
+    print(f'        -- total: {total if total != 0 else "coinbase"}')
 
 
 def process_vout(transaction: Transaction, vout_set: dict):
-    print('        ---')
-    for i, vout in enumerate(vout_set):
+    total = 0
+    for i, vout in enumerate(vout_set):    
         vout_type = get_vout_type(vout)
         if  vout_type in [VoutType.PUBKEY, VoutType.PUBKEYHASH]:
+            # Get wallet address
             if vout_type == VoutType.PUBKEY:
                 address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])
             else:
                 address = vout['scriptPubKey']['addresses'][0]    
-            
+            # Get or create wallet, add UTXO
             wallet, created = Wallet.objects.get_or_create(address=address)
             utxo = Utxo.objects.create(
                 id=f'{transaction.txid}-{vout["n"]}',
@@ -78,14 +84,31 @@ def process_vout(transaction: Transaction, vout_set: dict):
                 value=vout['value'],
                 created=transaction.block.time)
             print(f'        vout {i} {wallet} {utxo}')
+            total += vout['value']
         elif vout_type == VoutType.NONSTANDARD:
             if transaction.txid in KNOWN_NONSTANDARD_TX:
                 print(f'        vout {i} NONSTANDARD!')
-            else:
-                # import ipdb; ipdb.set_trace()
-                raise Exception('Unhandled nonstandard transaction')
+                continue
+
+            if 'OP_RETURN' in vout['scriptPubKey']['asm']:
+                print('OP_RETURN transaction!')
+                from pprint import pprint as pp
+                pp(vout)
+                import ipdb; ipdb.set_trace()
+                raise Exception('Halting on OP_RETURN transaction')
+            # Go ahead and create the UTXO, not linked to any wallet. In case
+            # it's spendable and gets spent later. This should account for less
+            # than 0.01% of utxos, so no real size concern
+            utxo = Utxo.objects.create(
+                id=f'{transaction.txid}-{vout["n"]}',
+                tx_in=transaction,
+                type=vout_type,
+                value=vout['value'],
+                created=transaction.block.time)
+            print(f'        vout {i} [NONSTANDARD] {utxo}')
+            total += vout['value']
         else:
-            import ipdb; ipdb.set_trace()
             raise UnknownVoutSchema(vout_type)
+    print(f'        -- total: {total}')
         
 
