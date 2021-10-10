@@ -69,7 +69,7 @@ class Transaction(models.Model):
 class Wallet(models.Model):
 
     # Addresses are only 26-35 chars long, but pad for future-proofing
-    address = models.CharField(max_length=64, unique=True)
+    address = models.CharField(max_length=64, unique=True, db_index=True)
 
     # balance = models.DecimalField(max_digits=15, decimal_places=8, default=0)
     # tx_count = models.IntegerField(default=0)
@@ -109,4 +109,60 @@ class Utxo(models.Model):
 
     def __str__(self):
         is_spent = '[SPENT]' if self.spent is not None else ''
-        return f'Utxo: {self.id} {self.value} {is_spent}'
+        return f'Utxo: {self.id} {self.value:.8f} {is_spent}'
+
+
+class HODLWave(models.Model):
+
+    date = models.DateField(unique=True)
+
+    # Under 1 day
+    band_1d_count = models.IntegerField(default=0)
+    band_1d_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 1 day - 1 week
+    band_1w_count = models.IntegerField(default=0)
+    band_1w_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 1 week - 1 month
+    band_1m_count = models.IntegerField(default=0)
+    band_1m_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 1 - 3 months
+    band_3m_count = models.IntegerField(default=0)
+    band_3m_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 3 - 6 months
+    band_6m_count = models.IntegerField(default=0)
+    band_6m_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 6 months - 1 year
+    band_1y_count = models.IntegerField(default=0)
+    band_1y_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 1 - 2 years
+    band_2y_count = models.IntegerField(default=0)
+    band_2y_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 2 - 3 years
+    band_3y_count = models.IntegerField(default=0)
+    band_3y_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 3 - 5 years
+    band_5y_count = models.IntegerField(default=0)
+    band_5y_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 5 - 7 years
+    band_7y_count = models.IntegerField(default=0)
+    band_7y_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 7-10 years
+    band_10y_count = models.IntegerField(default=0)
+    band_10y_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    # 10+ years
+    band_over_10y_count = models.IntegerField(default=0)
+    band_over_10y_sum   = models.DecimalField(default=0, max_digits=30, decimal_places=8)
+
+    def __str__(self):
+        return f'HODL Wave {self.date}'

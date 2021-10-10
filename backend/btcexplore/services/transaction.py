@@ -51,25 +51,24 @@ def process_vin(transaction: Transaction, vin_set: dict):
             print(f'        vin {i} (coinbase)')
         elif vin_type == VinType.TXOUT:
             utxo = Utxo.objects.get(id=f'{vin["txid"]}-{vin["vout"]}')
-            if utxo.type == 3:
-                print('Spent nonstandard utxo!')
-                import ipdb; ipdb.set_trace()
             utxo.spent = transaction.block.time
             utxo.tx_out = transaction
             utxo.save()
             total += utxo.value
             print(f'        vin {i} {utxo}')
         else:
+            import ipdb; ipdb.set_trace()
             raise UnknownVinSchema(vin_type)
-    print(f'        -- total: {total if total != 0 else "coinbase"}')
+    print(f'        -- in:  {total if total != 0 else "coinbase"}')
 
 
 def process_vout(transaction: Transaction, vout_set: dict):
     total = 0
     for i, vout in enumerate(vout_set):    
         vout_type = get_vout_type(vout)
+        # Using a concat of transaction_id + output number
+        utxo_id = f'{transaction.txid}-{vout["n"]}'
         if  vout_type in [VoutType.PUBKEY, VoutType.PUBKEYHASH]:
-            # Get wallet address
             if vout_type == VoutType.PUBKEY:
                 address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])
             else:
@@ -77,7 +76,7 @@ def process_vout(transaction: Transaction, vout_set: dict):
             # Get or create wallet, add UTXO
             wallet, created = Wallet.objects.get_or_create(address=address)
             utxo = Utxo.objects.create(
-                id=f'{transaction.txid}-{vout["n"]}',
+                id=utxo_id,
                 tx_in=transaction,
                 wallet=wallet,
                 type=vout_type,
@@ -97,18 +96,32 @@ def process_vout(transaction: Transaction, vout_set: dict):
                 import ipdb; ipdb.set_trace()
                 raise Exception('Halting on OP_RETURN transaction')
             # Go ahead and create the UTXO, not linked to any wallet. In case
-            # it's spendable and gets spent later. This should account for less
-            # than 0.01% of utxos, so no real size concern
+            # it's spendable and gets spent later (confirmed: this happens). 
             utxo = Utxo.objects.create(
-                id=f'{transaction.txid}-{vout["n"]}',
+                id=utxo_id,
                 tx_in=transaction,
                 type=vout_type,
                 value=vout['value'],
                 created=transaction.block.time)
-            print(f'        vout {i} [NONSTANDARD] {utxo}')
+            print(f'        vout {i} [nonstandard] {utxo}')
             total += vout['value']
+        elif vout_type == VoutType.MULTISIG:
+            # Create a Utxo not linked to any wallet. I decided on that after 
+            # reading up on multisig for a bit, so not 100% convinced
+            # Rationale: 
+            #     - doesn't belong to anybody until spent into an individual address
+            #     - doesn't make sense to duplicate in multiple addresses
+            utxo = Utxo.objects.create(
+                id=utxo_id,
+                tx_in=transaction,
+                type=vout_type,
+                value=vout['value'],
+                created=transaction.block.time)
+            print(f'        vout {i} [multisig] {utxo}')
+            total += vout['value']            
         else:
+            import ipdb; ipdb.set_trace()
             raise UnknownVoutSchema(vout_type)
-    print(f'        -- total: {total}')
+    print(f'        -- out: {total}')
         
 

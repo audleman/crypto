@@ -7,9 +7,10 @@ from django.db import models
 
 
 class VoutType(models.TextChoices):
-    PUBKEY = 1
-    PUBKEYHASH = 2
+    PUBKEY      = 1
+    PUBKEYHASH  = 2
     NONSTANDARD = 3
+    MULTISIG    = 4
 
 
 SCHEMAS = {
@@ -57,6 +58,30 @@ SCHEMAS = {
         'required': ['n', 'value', 'scriptPubKey'],
         'additionalProperties': False
     },
+    VoutType.MULTISIG: {
+        'type': 'object',
+        'properties': {
+            'n': {'type': 'number'},
+            'value': {'type': 'number'},
+            'scriptPubKey': {
+                'type': 'object',
+                'properties': {
+                    'addresses': {'type': 'array', 'minItems': 2, 'maxItems': 2},
+                    'asm': {
+                        'type': 'string',
+                        'pattern': '1 .* OP_CHECKMULTISIG'
+                    },
+                    'hex': {'type': 'string'},
+                    'reqSigs': {'type': 'number'},
+                    'type': {'type': 'string', 'pattern': 'multisig'}
+                },
+                'required': ['addresses', 'asm', 'hex', 'reqSigs', 'type'],
+                'additionalProperties': False
+            }
+        },
+        'required': ['n', 'value', 'scriptPubKey'],
+        'additionalProperties': False
+    },
     VoutType.NONSTANDARD: {
         'type': 'object',
         'properties': {
@@ -93,4 +118,5 @@ def get_vout_type(instance):
             return schema_type
         except ValidationError:
             pass
+    import ipdb; ipdb.set_trace()
     raise UnknownVoutSchema(instance)

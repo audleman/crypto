@@ -107,3 +107,37 @@ class VoutPubkeyhashFactory(factory.DictFactory):
         hex=FuzzyText(length=100),
         type='pubkeyhash'))
 
+
+class VoutMultisigFactory(factory.DictFactory):
+    """
+    {
+        'n': 0,
+        'value': Decimal('0.01000000'),
+        'scriptPubKey': {
+            'addresses': [
+                '1AJbsFZ64EpEfS5UAjAfcUG8pH8Jn3rn1F',
+                '1A8JiWcwvpY7tAopUkSnGuEYHmzGYfZPiq'
+            ],
+            'asm': '1 '
+                   '04cc71eb30d653c0c3163990c47b976f3fb3f37cccdcbedb169a1dfef58bbfbfaff7d8a473e7e2e6d317b87bafe8bde97e3cf8f065dec022b51d11fcdd0d348ac4 '
+                   '0461cbdcc5409fb4b4d42b51d33381354d80e550078cb532a34bfa2fcfdeb7d76519aecc62770f5b0e4ef8551946d8a540911abe3e7854a26f39f58b25c15342af '
+                   '2 OP_CHECKMULTISIG',
+            'hex': '514104cc71eb30d653c0c3163990c47b976f3fb3f37cccdcbedb169a1dfef58bbfbfaff7d8a473e7e2e6d317b87bafe8bde97e3cf8f065dec022b51d11fcdd0d348ac4410461cbdcc5409fb4b4d42b51d33381354d80e550078cb532a34bfa2fcfdeb7d76519aecc62770f5b0e4ef8551946d8a540911abe3e7854a26f39f58b25c15342af52ae',
+            'reqSigs': 1,
+            'type': 'multisig'
+        }
+    }
+    """
+    n = 0
+    value = FuzzyDecimal(low=0.00000001, high=50.00000000, precision=8)
+    scriptPubKey = factory.LazyFunction(lambda: factory.DictFactory(
+        addresses=factory.LazyFunction(lambda: factory.ListFactory(
+            address1=FuzzyText(length=34),
+            address2=FuzzyText(length=34))),
+        asm=FuzzyText(
+            length=200, 
+            prefix='1 ',
+            suffix=' 2 OP_CHECKMULTISIG'),
+        reqSigs=1,
+        hex=FuzzyText(length=100),
+        type='multisig'))
