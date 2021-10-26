@@ -48,18 +48,19 @@ def process_vin(transaction: Transaction, vin_set: dict):
     for i, vin in enumerate(vin_set):
         vin_type = get_vin_type(vin)
         if vin_type == VinType.COINBASE:
-            print(f'        vin {i} (coinbase)')
+            pass
+            # print(f'        vin {i} (coinbase)')
         elif vin_type == VinType.TXOUT:
             utxo = Utxo.objects.get(id=f'{vin["txid"]}-{vin["vout"]}')
             utxo.spent = transaction.block.time
             utxo.tx_out = transaction
             utxo.save()
             total += utxo.value
-            print(f'        vin {i} {utxo}')
+            # print(f'        vin {i} {utxo}')
         else:
             import ipdb; ipdb.set_trace()
             raise UnknownVinSchema(vin_type)
-    print(f'        -- in:  {total if total != 0 else "coinbase"}')
+    # print(f'        -- in:  {total if total != 0 else "coinbase"}')
 
 
 def process_vout(transaction: Transaction, vout_set: dict):
@@ -68,11 +69,14 @@ def process_vout(transaction: Transaction, vout_set: dict):
         vout_type = get_vout_type(vout)
         # Using a concat of transaction_id + output number
         utxo_id = f'{transaction.txid}-{vout["n"]}'
-        if  vout_type in [VoutType.PUBKEY, VoutType.PUBKEYHASH]:
+        if  vout_type in [VoutType.PUBKEY, VoutType.PUBKEYHASH, VoutType.SCRIPTHASH]:
+            """
+            The most standard vout types. Create and link to wallet
+            """
             if vout_type == VoutType.PUBKEY:
                 address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])
-            else:
-                address = vout['scriptPubKey']['addresses'][0]    
+            elif vout_type in [VoutType.PUBKEYHASH, VoutType.SCRIPTHASH]:
+                address = vout['scriptPubKey']['addresses'][0]
             # Get or create wallet, add UTXO
             wallet, created = Wallet.objects.get_or_create(address=address)
             utxo = Utxo.objects.create(
@@ -82,19 +86,38 @@ def process_vout(transaction: Transaction, vout_set: dict):
                 type=vout_type,
                 value=vout['value'],
                 created=transaction.block.time)
-            print(f'        vout {i} {wallet} {utxo}')
+            # print(f'        vout {i} {wallet} {utxo}')
             total += vout['value']
         elif vout_type == VoutType.NONSTANDARD:
+            # Handful of bad nonstandard transactions from early on, would lead 
+            # to unique txid database errors so we omit them
             if transaction.txid in KNOWN_NONSTANDARD_TX:
-                print(f'        vout {i} NONSTANDARD!')
+                # print(f'        vout {i} NONSTANDARD!')
                 continue
 
+            """
+            Some nonstandard transactions have OP_RETURN in them. Example:
+            {'n': 1,
+            'scriptPubKey': {'asm': 'OP_RETURN OP_DUP OP_HASH160 '
+                                    'cd2b3298b7f455f39805377e5f213093df3cc09a '
+                                    'OP_EQUALVERIFY OP_CHECKSIG',
+                            'hex': '6a76a914cd2b3298b7f455f39805377e5f213093df3cc09a88ac',
+                            'type': 'nonstandard'},
+            'value': Decimal('0E-8')}
+            """
+            
             if 'OP_RETURN' in vout['scriptPubKey']['asm']:
-                print('OP_RETURN transaction!')
-                from pprint import pprint as pp
-                pp(vout)
-                import ipdb; ipdb.set_trace()
-                raise Exception('Halting on OP_RETURN transaction')
+                if (
+                    vout['scriptPubKey']['asm'].startswith('OP_RETURN') or
+                    vout['value'] == 0
+                ):
+                    pass
+                else:
+                    # print('OP_RETURN transaction!')
+                    from pprint import pprint as pp
+                    pp(vout)
+                    import ipdb; ipdb.set_trace()
+                    raise Exception('Halting on OP_RETURN transaction')
             # Go ahead and create the UTXO, not linked to any wallet. In case
             # it's spendable and gets spent later (confirmed: this happens). 
             utxo = Utxo.objects.create(
@@ -103,25 +126,36 @@ def process_vout(transaction: Transaction, vout_set: dict):
                 type=vout_type,
                 value=vout['value'],
                 created=transaction.block.time)
-            print(f'        vout {i} [nonstandard] {utxo}')
+            # print(f'        vout {i} [nonstandard] {utxo}')
             total += vout['value']
         elif vout_type == VoutType.MULTISIG:
-            # Create a Utxo not linked to any wallet. I decided on that after 
-            # reading up on multisig for a bit, so not 100% convinced
-            # Rationale: 
-            #     - doesn't belong to anybody until spent into an individual address
-            #     - doesn't make sense to duplicate in multiple addresses
+            """
+            Create a Utxo not linked to any wallet. I decided on that after 
+            reading up on multisig for a bit, so not 100% convinced
+            Rationale: 
+                - doesn't belong to anybody until spent into an individual address
+                - doesn't make sense to duplicate in multiple addresses, nor split
+            Future possibility:
+                - create separate relation on Wallet called 'claims'
+            """
             utxo = Utxo.objects.create(
                 id=utxo_id,
                 tx_in=transaction,
                 type=vout_type,
                 value=vout['value'],
                 created=transaction.block.time)
-            print(f'        vout {i} [multisig] {utxo}')
+            # print(f'        vout {i} [multisig] {utxo}')
             total += vout['value']            
+        elif vout_type == VoutType.NULLDATA:
+            """
+            I think these will have zero (or at least negligent) value so can 
+            be safely ignored
+            """
+            continue
         else:
+            print('Do not know how to handle this vout')
             import ipdb; ipdb.set_trace()
             raise UnknownVoutSchema(vout_type)
-    print(f'        -- out: {total}')
+    # print(f'        -- out: {total}')
         
 

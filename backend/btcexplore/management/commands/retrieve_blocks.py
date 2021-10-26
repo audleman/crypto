@@ -101,5 +101,5 @@ class Command(BaseCommand):
             last_block = created_blocks[-1]
             last_raw_block = raw_blocks[-1]
             if 'nextblockhash' not in last_raw_block:
-                print(f'{last_block} is at the tip')
+                print(f'{last_block} is the tip')
                 return

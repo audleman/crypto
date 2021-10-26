@@ -13,6 +13,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options['reset']:
+            raise 'nah bro'
             print('Resetting transactions onwards')
             # Start with a clean slate 
             Transaction.objects.all().delete()
@@ -26,19 +27,19 @@ class Command(BaseCommand):
         for block in unprocessed_blocks:
             # Atomic - if there's any trouble roll back the entire block
             with atomic():
-                print(block, '\n', '-' * len(str(block)))
                 for tx in block.extended_data['tx']:
                     if is_invalid_transaction(tx['txid'], block.height):
                         continue
                     transaction = Transaction.objects.create(
                         txid=tx['txid'],
                         block=block)
-                    print('   ', transaction)
+                    # print('   ', transaction)
                     process_vin(transaction, tx['vin'])
                     process_vout(transaction, tx['vout'])
-                    print ('')
+                    # print ('')
                 block.processed = True
                 block.save()
+                print(f'{block} {len(block.extended_data["tx"])} transactions processed')
 
                 
                 

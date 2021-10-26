@@ -11,6 +11,8 @@ class VoutType(models.TextChoices):
     PUBKEYHASH  = 2
     NONSTANDARD = 3
     MULTISIG    = 4
+    SCRIPTHASH  = 5
+    NULLDATA    = 6
 
 
 SCHEMAS = {
@@ -58,6 +60,30 @@ SCHEMAS = {
         'required': ['n', 'value', 'scriptPubKey'],
         'additionalProperties': False
     },
+    VoutType.SCRIPTHASH: {
+        'type': 'object',
+        'properties': {
+            'n': {'type': 'number'},
+            'value': {'type': 'number'},
+            'scriptPubKey': {
+                'type': 'object',
+                'properties': {
+                    'addresses': {'type': 'array', 'minItems': 1, 'maxItems': 1},
+                    'asm': {
+                        'type': 'string',
+                        'pattern': 'OP_HASH160 .* OP_EQUAL'
+                    },
+                    'hex': {'type': 'string'},
+                    'reqSigs': {'type': 'number'},
+                    'type': {'type': 'string', 'pattern': 'scripthash'}
+                },
+                'required': ['addresses', 'asm', 'hex', 'reqSigs', 'type'],
+                'additionalProperties': False
+            }
+        },
+        'required': ['n', 'value', 'scriptPubKey'],
+        'additionalProperties': False
+    },
     VoutType.MULTISIG: {
         'type': 'object',
         'properties': {
@@ -66,10 +92,10 @@ SCHEMAS = {
             'scriptPubKey': {
                 'type': 'object',
                 'properties': {
-                    'addresses': {'type': 'array', 'minItems': 2, 'maxItems': 2},
+                    'addresses': {'type': 'array', 'minItems': 2, 'maxItems': 3},
                     'asm': {
                         'type': 'string',
-                        'pattern': '1 .* OP_CHECKMULTISIG'
+                        'pattern': '.* OP_CHECKMULTISIG'
                     },
                     'hex': {'type': 'string'},
                     'reqSigs': {'type': 'number'},
@@ -110,7 +136,28 @@ class UnknownVoutSchema(Exception):
 
 def get_vout_type(instance):
     """
-    Check vout instance against known JSON schemas
+    Hand-coded logic. Not as cool as jsonschema but efficient
+    """
+    if instance['scriptPubKey']['type'] == 'pubkey':
+        return VoutType.PUBKEY
+    elif instance['scriptPubKey']['type'] == 'pubkeyhash':
+        return VoutType.PUBKEYHASH
+    elif instance['scriptPubKey']['type'] == 'scripthash':
+        return VoutType.SCRIPTHASH
+    elif instance['scriptPubKey']['type'] == 'multisig':
+        return VoutType.MULTISIG
+    elif instance['scriptPubKey']['type'] == 'nonstandard':
+        return VoutType.NONSTANDARD
+    elif instance['scriptPubKey']['type'] == 'nulldata':
+        return VoutType.NULLDATA
+    raise UnknownVoutSchema(instance)
+
+
+def get_vout_type_by_schema(instance):
+    """
+    Use the very nice JSON validation provided by JSONSchema
+
+    HOWEVER - appears to be incredibly slow 
     """
     for schema_type, schema in SCHEMAS.items():
         try:

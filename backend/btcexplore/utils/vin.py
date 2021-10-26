@@ -46,7 +46,12 @@ class UnknownVinSchema(Exception):
     pass
 
 
-def get_vin_type(instance):
+def get_vin_type_by_schema(instance):
+    """
+    Use the very nice JSON validation provided by JSONSchema
+
+    HOWEVER - appears to be incredibly slow 
+    """
     for schema_type, schema in SCHEMAS.items():
         try:
             validate(instance, schema)
@@ -54,3 +59,12 @@ def get_vin_type(instance):
         except ValidationError:
             pass
     raise UnknownVinSchema(instance)
+
+
+def get_vin_type(instance):
+    if 'coinbase' in instance:
+        return VinType.COINBASE
+    elif 'txid' in instance:
+        return VinType.TXOUT
+    else:
+        raise UnknownVinSchema(instance)

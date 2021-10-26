@@ -141,3 +141,50 @@ class VoutMultisigFactory(factory.DictFactory):
         reqSigs=1,
         hex=FuzzyText(length=100),
         type='multisig'))
+
+
+class VoutScriptHashFactory(factory.DictFactory):
+    """
+    {
+        'n': 1,
+        'value': Decimal('0.00400000'),
+        'scriptPubKey': {
+            'addresses': ['342ftSRCvFHfCeFFBuz4xwbeqnDw6BGUey'],
+            'asm': 'OP_HASH160 19a7d869032368fd1f1e26e5e73a4ad0e474960e '
+                   'OP_EQUAL',
+            'hex': 'a91419a7d869032368fd1f1e26e5e73a4ad0e474960e87',
+            'reqSigs': 1,
+            'type': 'scripthash'
+        }
+    }
+    """
+    n = 0
+    value = FuzzyDecimal(low=0.00000001, high=50.00000000, precision=8)
+    scriptPubKey = factory.LazyFunction(lambda: factory.DictFactory(
+        addresses=factory.LazyFunction(lambda: factory.ListFactory(only_one_address=FuzzyText(length=34))),
+        asm=FuzzyText(
+            length=100, 
+            prefix='OP_DUP OP_HASH160 ',
+            suffix=' OP_EQUALVERIFY OP_CHECKSIG'),
+        reqSigs=1,
+        hex=FuzzyText(length=100),
+        type='scripthash'))
+
+
+class VoutNullDataFactory(factory.DictFactory):
+    """
+    {
+        'n': 0,
+        'scriptPubKey': {
+            'asm': 'OP_RETURN', 
+            'hex': '6a', 
+            'type': 'nulldata'},
+        'value': Decimal('0E-8')}
+    """
+    n = 0
+    value = FuzzyDecimal(low=0.00000000, high=0.00000000, precision=8)
+    scriptPubKey = factory.LazyFunction(lambda: factory.DictFactory(
+        addresses=factory.LazyFunction(lambda: factory.ListFactory(only_one_address=FuzzyText(length=34))),
+        asm='OP_RETURN',
+        hex='6a',
+        type='nulldata'))
