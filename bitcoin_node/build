@@ -7,7 +7,7 @@ set -ex
 # ------------------------------------------------------------------------------
 
 echo "Fetching bitcoin version: $BITCOIN_VERSION"
-curl -Ls https://github.com/bitcoin/bitcoin/archive/refs/tags/v$BITCOIN_VERSION.tar.gz | tar -zx --strip-components=1
+curl -L https://github.com/bitcoin/bitcoin/archive/refs/tags/v$BITCOIN_VERSION.tar.gz | tar -zx --strip-components=1
 
 
 # ------------------------------------------------------------------------------
@@ -19,33 +19,3 @@ echo "Building bitcoin source..."
 ./configure --disable-wallet
 make 
 make install
-
-
-# ------------------------------------------------------------------------------
-# Create a bitcoin.conf file if not exists
-# ------------------------------------------------------------------------------
-
-if [ ! -e "$HOME/.bitcoin/bitcoin.conf" ]; then
-    mkdir -p $HOME/.bitcoin
-
-    echo "Creating bitcoin.conf"
-    
-    cat <<EOF > $HOME/.bitcoin/bitcoin.conf
-#---------------------------------------
-# bitcoin.conf
-#---------------------------------------
-# tells bitcoind to accept JSON-RPC commands
-server=1
-
-# Has to accept non-localhost because of Docker networking
-rpcallowip=0.0.0.0/0
-rpcbind=:8332
-
-# RPC username/password
-rpcuser=bitcoinrpcuser
-rpcpassword=`dd if=/dev/urandom bs=33 count=1 2>/dev/null | base64`
-EOF
-
-    cat $HOME/.bitcoin/bitcoin.conf
-
-fi

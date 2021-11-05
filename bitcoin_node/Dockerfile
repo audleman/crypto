@@ -3,7 +3,7 @@ FROM ubuntu:20.04
 # Update this env variable to set version of bitcoin
 ENV BITCOIN_VERSION=22.0
 
-# Bitcoin dependencies
+# Install apt dependencies, cleanup afterwards
 RUN apt update \
     && apt install -y --no-install-recommends \
         build-essential \
@@ -18,26 +18,19 @@ RUN apt update \
         libboost-filesystem-dev \
         libboost-test-dev \
         python3 \
-        curl
-        
-# Optional Software
-# RUN apt install -y git 
+        ca-certificates \
+        curl \
+    && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Clean up after apt
-RUN apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-# Checkout bitcoin master branch (TODO: peg to version)
-# RUN GIT_SSL_NO_VERIFY=1 git clone https://github.com/bitcoin/bitcoin.git bitcoin
-
-# Set environment
 WORKDIR /bitcoin
 ENV HOME /bitcoin
 
-# Build bitcoin from source
+# Run build script to download and compile bitcoind from source
 COPY ./build .
 RUN chmod +x build && ./build
 
+EXPOSE 8332 8333
+VOLUME ["/bitcoin/.bitcoin"]
+
 # Let 'er rip
-# COPY ./go .
-# RUN chmod +x go
 CMD ["bitcoind"]
