@@ -37,34 +37,51 @@ def is_invalid_transaction(txid: str, block_height: int):
     return txid in INVALID_TRANSACTIONS and INVALID_TRANSACTIONS[txid] == block_height
          
 
-def process_vin(transaction: Transaction, vin_set: dict):
+def process_vin(transaction: Transaction, vin_set: dict, created_utxos: list):
     """
-    Process transactions in the `vin` of a transaction. 
+    Process utxos in the `vin` of a transaction. 
 
-    Finds the associated UTXOs, deletes them, and records that they're spend
-    on their transaction
+    Finds the associated UTXOs and marks it as spent. It's possible for the utxo
+    to be from a transaction in the same block, meaning it's not yet persisted
+    to the database. So first check the list of created utxos, then if not found
+    query the database.
     """
     total = 0
+    modified_utxos = []
     for i, vin in enumerate(vin_set):
         vin_type = get_vin_type(vin)
         if vin_type == VinType.COINBASE:
             pass
             # print(f'        vin {i} (coinbase)')
         elif vin_type == VinType.TXOUT:
-            utxo = Utxo.objects.get(id=f'{vin["txid"]}-{vin["vout"]}')
-            utxo.spent = transaction.block.time
-            utxo.tx_out = transaction
-            utxo.save()
+            utxo_id = f'{vin["txid"]}-{vin["vout"]}'
+            # Look for vin in transactions created this block
+            utxo_match = [u for u in created_utxos if u.id == utxo_id]
+            if len(utxo_match):
+                assert len(utxo_match) == 1
+                utxo = utxo_match[0]
+                utxo.spent = transaction.block.time
+                utxo.tx_out = transaction
+                # no need to add to modified utxos as already in created
+            else:
+                # If not, search the database
+                utxo = Utxo.objects.get(id=utxo_id)
+                utxo.spent = transaction.block.time
+                utxo.tx_out = transaction
+                # add to list of modified for bulk update
+                modified_utxos.append(utxo)
+            # utxo.save()
             total += utxo.value
             # print(f'        vin {i} {utxo}')
         else:
-            import ipdb; ipdb.set_trace()
             raise UnknownVinSchema(vin_type)
+    return modified_utxos
     # print(f'        -- in:  {total if total != 0 else "coinbase"}')
 
 
 def process_vout(transaction: Transaction, vout_set: dict):
     total = 0
+    created_utxos = []
     for i, vout in enumerate(vout_set):    
         vout_type = get_vout_type(vout)
         # Using a concat of transaction_id + output number
@@ -79,13 +96,14 @@ def process_vout(transaction: Transaction, vout_set: dict):
                 address = vout['scriptPubKey']['addresses'][0]
             # Get or create wallet, add UTXO
             wallet, created = Wallet.objects.get_or_create(address=address)
-            utxo = Utxo.objects.create(
+            utxo = Utxo(
                 id=utxo_id,
                 tx_in=transaction,
                 wallet=wallet,
                 type=vout_type,
                 value=vout['value'],
                 created=transaction.block.time)
+            created_utxos.append(utxo)
             # print(f'        vout {i} {wallet} {utxo}')
             total += vout['value']
         elif vout_type == VoutType.NONSTANDARD:
@@ -117,38 +135,40 @@ def process_vout(transaction: Transaction, vout_set: dict):
                     from pprint import pprint as pp
                     pp(vout)
                     import ipdb; ipdb.set_trace()
-                    raise Exception('Halting on OP_RETURN transaction')
+                    # raise Exception('Halting on OP_RETURN transaction')
             # Go ahead and create the UTXO, not linked to any wallet. In case
             # it's spendable and gets spent later (confirmed: this happens). 
-            utxo = Utxo.objects.create(
+            utxo = Utxo(
                 id=utxo_id,
                 tx_in=transaction,
                 type=vout_type,
                 value=vout['value'],
                 created=transaction.block.time)
+            created_utxos.append(utxo)
             # print(f'        vout {i} [nonstandard] {utxo}')
             total += vout['value']
         elif vout_type == VoutType.MULTISIG:
             """
             Create a Utxo not linked to any wallet. I decided on that after 
-            reading up on multisig for a bit, so not 100% convinced
+            reading up on multisig for a bit, not 100% convinced
             Rationale: 
                 - doesn't belong to anybody until spent into an individual address
-                - doesn't make sense to duplicate in multiple addresses, nor split
+                - doesn't make sense to duplicate/split
             Future possibility:
                 - create separate relation on Wallet called 'claims'
             """
-            utxo = Utxo.objects.create(
+            utxo = Utxo(
                 id=utxo_id,
                 tx_in=transaction,
                 type=vout_type,
                 value=vout['value'],
                 created=transaction.block.time)
+            created_utxos.append(utxo)
             # print(f'        vout {i} [multisig] {utxo}')
             total += vout['value']            
         elif vout_type == VoutType.NULLDATA:
             """
-            I think these will have zero (or at least negligent) value so can 
+            I think these will have zero (or negligent) value so can 
             be safely ignored
             """
             continue
@@ -157,5 +177,6 @@ def process_vout(transaction: Transaction, vout_set: dict):
             import ipdb; ipdb.set_trace()
             raise UnknownVoutSchema(vout_type)
     # print(f'        -- out: {total}')
+    return created_utxos
         
 

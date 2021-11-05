@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand, CommandError
 from btcexplore.models import Block, Transaction, Wallet, Utxo
 from btcexplore.services.transaction import process_vin, process_vout, is_invalid_transaction
 from django.db.transaction import atomic
+import time 
 
 
 class Command(BaseCommand):
@@ -25,6 +26,9 @@ class Command(BaseCommand):
 
         unprocessed_blocks = Block.objects.filter(processed=False).order_by('height')
         for block in unprocessed_blocks:
+            modified_utxos = []
+            created_utxos = []
+            start = time.time()
             # Atomic - if there's any trouble roll back the entire block
             with atomic():
                 for tx in block.extended_data['tx']:
@@ -34,12 +38,19 @@ class Command(BaseCommand):
                         txid=tx['txid'],
                         block=block)
                     # print('   ', transaction)
-                    process_vin(transaction, tx['vin'])
-                    process_vout(transaction, tx['vout'])
+                    modified_utxos += process_vin(transaction, tx['vin'], created_utxos)
+                    created_utxos += process_vout(transaction, tx['vout'])
+
+                # Batched utxo db operations
+                Utxo.objects.bulk_update(modified_utxos, ['spent', 'tx_out'])
+                Utxo.objects.bulk_create(created_utxos)
                     # print ('')
                 block.processed = True
                 block.save()
-                print(f'{block} {len(block.extended_data["tx"])} transactions processed')
+            print(f'{block} in {(time.time() - start):.4f}s')
+            print(f'    {len(block.extended_data["tx"])} transactions')
+            print(f'    {len(modified_utxos)} consumed utxos')
+            print(f'    {len(created_utxos)} created utxos')
 
                 
                 
