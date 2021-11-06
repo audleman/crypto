@@ -1,9 +1,8 @@
 #!/bin/bash
 set -ex
 
-
 # ------------------------------------------------------------------------------
-# Checkout tagged release
+# Download bitcoin release from github
 # ------------------------------------------------------------------------------
 
 echo "Fetching bitcoin version: $BITCOIN_VERSION"

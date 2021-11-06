@@ -93,7 +93,10 @@ def process_vout(transaction: Transaction, vout_set: dict):
             if vout_type == VoutType.PUBKEY:
                 address = address_from_public_key(vout['scriptPubKey']['asm'].split(' ')[0])
             elif vout_type in [VoutType.PUBKEYHASH, VoutType.SCRIPTHASH]:
-                address = vout['scriptPubKey']['addresses'][0]
+                try:
+                    address = vout['scriptPubKey']['addresses'][0] if 'addresses' in vout['scriptPubKey'] else vout['scriptPubKey']['address']
+                except:
+                    import ipdb; ipdb.set_trace() 
             # Get or create wallet, add UTXO
             wallet, created = Wallet.objects.get_or_create(address=address)
             utxo = Utxo(

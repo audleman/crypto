@@ -2,7 +2,7 @@
 set -ex
 
 # ------------------------------------------------------------------------------
-# Create a bitcoin.conf file if not exists
+# Check for bitcoin.conf, create if this is first time
 # ------------------------------------------------------------------------------
 
 if [ ! -e "$HOME/.bitcoin/bitcoin.conf" ]; then

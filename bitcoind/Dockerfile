@@ -1,7 +1,11 @@
 FROM ubuntu:20.04
 
-# Update this env variable to set version of bitcoin
-ENV BITCOIN_VERSION=22.0
+# Passed in by docker-compose.yaml
+ARG BITCOIN_VERSION
+ARG HOME
+
+# Pass into container runtime
+ENV HOME $HOME
 
 # Install apt dependencies, cleanup afterwards
 RUN apt update \
@@ -22,15 +26,16 @@ RUN apt update \
         curl \
     && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /bitcoin
-ENV HOME /bitcoin
+WORKDIR $HOME
 
-# Run build script to download and compile bitcoind from source
+# Run build script - downloads and compiles bitcoin
 COPY ./build .
 RUN chmod +x build && ./build
 
+# Expose bitcoin ports
 EXPOSE 8332 8333
-VOLUME ["/bitcoin/.bitcoin"]
 
 # Let 'er rip
-CMD ["bitcoind"]
+COPY ./run .
+RUN chmod +x run
+CMD ["./run"]

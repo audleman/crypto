@@ -1,0 +1,32 @@
+version: "3.9"
+
+# ------------------------------------------------------------------------------
+# Services
+# ------------------------------------------------------------------------------
+
+services:
+  bitcoind:
+    ports:
+      - 8333:8333
+      - 127.0.0.1:8332:8332  # take care to not expose RPC port to the world
+    volumes:
+      - bitcoind-data:/bitcoin/.bitcoin
+    build:
+      context: bitcoind
+      args:
+        BITCOIN_VERSION: 22.0  # How to upgrade bitcoin
+        HOME: /bitcoin
+
+
+# ------------------------------------------------------------------------------
+# Volumes
+# ------------------------------------------------------------------------------
+
+volumes:
+  # Bitcoin data is huge, I have a second disk just for that
+  bitcoind-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcdisk
