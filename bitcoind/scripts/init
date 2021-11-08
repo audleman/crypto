@@ -48,5 +48,5 @@ EOF
     cat $HOME/.bitcoin/bitcoin.conf
 fi
 
-# Use exec to replace this shell with the CMD process
-exec "$@"
+# Start the bitcoin daemon
+exec "bitcoind"
