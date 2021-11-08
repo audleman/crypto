@@ -3,8 +3,14 @@ set -e
 
 # ------------------------------------------------------------------------------
 #
-# This script checks the bitcoin data volume for necessary configuration, 
-# initializing it if not exists.
+# Entrypoint for the container
+#
+# Checks the bitcoin data volume for necessary configuration, initializing 
+# if not exists:
+#   - wallet named 'wallet' exists
+#   - bitcoin.conf is present (RPC and wallet settings)
+#
+# Then simply switches over to `bitcoind`
 #
 # ------------------------------------------------------------------------------
 
@@ -19,7 +25,7 @@ then
     
 fi
 
-# Add bitcoin.conf, defining operating behavior of our bitcoind daemon
+# Add bitcoin.conf
 if [ ! -e "$HOME/.bitcoin/bitcoin.conf" ]
 then
     mkdir -p $HOME/.bitcoin
@@ -48,5 +54,5 @@ EOF
     cat $HOME/.bitcoin/bitcoin.conf
 fi
 
-# Start the bitcoin daemon
+# Start the bitcoin daemon. `exec` will replace the shell process
 exec "bitcoind"

@@ -29,7 +29,7 @@ RUN chmod +x build && ./build
 
 # --- 
 # Keep image size down by starting from ubuntu base again, only copying
-# over build artifacts from the builder stage
+# over binaries from the builder stage
 # ---
 from ubuntu:20.04
 

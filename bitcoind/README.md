@@ -1,6 +1,5 @@
-# What is it
 This folder contains a dockerfile for running a full bitcoin core node. It 
-downloads the source code from Github, builds from source, and runs a full node.
+downloads the source code from Github and builds from source.
 
 Data persistence is handled with an external volume. You must ensure it has
 enough space to hold the entire block history. Thanks to this, the container 
@@ -12,7 +11,7 @@ already exist on the data volume.
 The RPC api is enabled with a random password generated on initialization. See
 docker-compose.yaml for security considerations. 
 
-### Updating bitcoin core
+### Updating to a newer version of bitcoin core
 
 Update the environment variable BITCOIN_VERSION to the release you want
 in docker-compose.yaml
