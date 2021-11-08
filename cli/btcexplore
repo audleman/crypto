@@ -6,6 +6,9 @@ import yaml
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
+# Peg to project dir so we can run cli tool from anywhere
+DOCKER_COMPOSE = f'docker-compose --project-directory={PROJECT_DIR}'
+# Parse service yaml file
 with open(f'{PROJECT_DIR}/docker-compose.yml') as f:
     compose = yaml.load(f.read(), Loader=yaml.FullLoader)
 SERVICE_LIST = [s for s in compose['services'].keys()]
@@ -13,11 +16,8 @@ SERVICE_LIST = [s for s in compose['services'].keys()]
 
 class BtcExplore(object):
     """
-    CLI tool for the BtcExplore project. Usage:
-
-    $ btcexplore
+    CLI toolbelt for the BtcExplore project
     """
-
     def __init__(self):
         parser = self.build_parser()
         args = parser.parse_args()
@@ -25,7 +25,7 @@ class BtcExplore(object):
             args.func(args)
         else:
             parser.print_help()
-            print()
+            print('')
 
     def build_parser(self):
         desc = 'toolbelt for the btcexplore project'
@@ -35,12 +35,13 @@ class BtcExplore(object):
         # --- ssh --------------------------------------------------
         p = subparsers.add_parser('ssh', help='ssh into a service container')
         p.add_argument('service', choices=SERVICE_LIST, help=f'{",".join(SERVICE_LIST)}', nargs='?', default='bitcoind')
-        p.set_defaults(func=lambda args: os.system(f'docker-compose --project-directory={PROJECT_DIR} exec {args.service} bash'))
+        p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} exec {args.service} bash'))
 
         # --- logs --------------------------------------------------
         p = subparsers.add_parser('logs', help='tail logs of one or more services')
         p.add_argument('service', choices=SERVICE_LIST + [''], nargs='?', default='')
-        p.set_defaults(func=lambda args: os.system(f'docker-compose --project-directory={PROJECT_DIR} logs {args.service} --tail=50 -f'))
+        p.add_argument('-n', '--lines', default=50, help='output the last n lines before starting follow')
+        p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} logs --tail={args.lines} -f {args.service}'))
 
         return parser
         

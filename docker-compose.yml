@@ -5,6 +5,8 @@ version: "3.9"
 # ------------------------------------------------------------------------------
 
 services:
+
+  # --- Bitcoin daemon
   bitcoind:
     build:
       context: ./bitcoind
@@ -17,12 +19,23 @@ services:
       - bitcoind-data:/root/.bitcoin
     restart: on-failure
 
+  # --- Go-Ethereum light node
+  goeth:
+    image: ethereum/client-go:stable
+    ports:
+      - 30303:30303
+    volumes:
+      - geth-data:/root/.ethereum
+    command: "-syncmode light"
+
 
 # ------------------------------------------------------------------------------
 # Volumes
 # ------------------------------------------------------------------------------
 
 volumes:
+  # Running a light node, just use the default /var/lib/docker/volumes location
+  geth-data:
   # Bitcoin data is huge, I have a second disk just for that
   bitcoind-data:
     driver: local
