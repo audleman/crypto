@@ -3,8 +3,8 @@ set -e
 
 # ------------------------------------------------------------------------------
 #
-# This script checks the bitcoin data volume for necessary configuration, adding
-# it if not exists.
+# This script checks the bitcoin data volume for necessary configuration, 
+# initializing it if not exists.
 #
 # ------------------------------------------------------------------------------
 

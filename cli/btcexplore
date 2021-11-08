@@ -8,7 +8,7 @@ from pathlib import Path
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 with open(f'{PROJECT_DIR}/docker-compose.yml') as f:
     compose = yaml.load(f.read(), Loader=yaml.FullLoader)
-SERVICE_LIST = list(compose['services'].keys())
+SERVICE_LIST = [s for s in compose['services'].keys()]
 
 
 class BtcExplore(object):
@@ -21,28 +21,29 @@ class BtcExplore(object):
     def __init__(self):
         parser = self.build_parser()
         args = parser.parse_args()
-        args.func(args)
+        if 'func' in args:
+            args.func(args)
+        else:
+            parser.print_help()
+            print()
 
     def build_parser(self):
-        parser = argparse.ArgumentParser(prog='btcexplore', description='BtcExplore command line utility', usage='%(prog)s')
+        desc = 'toolbelt for the btcexplore project'
+        parser = argparse.ArgumentParser(prog='btcexplore', description=desc, usage='%(prog)s')
         subparsers = parser.add_subparsers(title='subcommands', metavar='')
 
         # --- ssh --------------------------------------------------
-        p = subparsers.add_parser( 'ssh', help='SSH into a container')
+        p = subparsers.add_parser('ssh', help='ssh into a service container')
         p.add_argument('service', choices=SERVICE_LIST, help=f'{",".join(SERVICE_LIST)}', nargs='?', default='bitcoind')
-        p.set_defaults(func=self.ssh)
+        p.set_defaults(func=lambda args: os.system(f'docker-compose --project-directory={PROJECT_DIR} exec {args.service} bash'))
 
         # --- logs --------------------------------------------------
-        p = subparsers.add_parser( 'logs', help='tail logs of one or more services')
-        p.add_argument('service', choices=SERVICE_LIST + [''], help=f'{",".join(SERVICE_LIST)}', nargs='?', default='')
-        p.set_defaults(func=lambda args: os.system(f'docker-compose logs {args.service} --tail=50 -f'))
+        p = subparsers.add_parser('logs', help='tail logs of one or more services')
+        p.add_argument('service', choices=SERVICE_LIST + [''], nargs='?', default='')
+        p.set_defaults(func=lambda args: os.system(f'docker-compose --project-directory={PROJECT_DIR} logs {args.service} --tail=50 -f'))
 
         return parser
         
-    def ssh(self, args):
-        os.system(f'docker-compose --project-directory={PROJECT_DIR} exec {args.service} bash')
-        
-
     def display_help(self):
         pass
 
