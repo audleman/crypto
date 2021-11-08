@@ -31,7 +31,7 @@ WORKDIR "/bitcoin"
 COPY ./scripts/build .
 RUN chmod +x build && ./build
 
-# Set up an entrypoint script to do pre-run initialization
+# Set up an entrypoint script, performs pre-run initialization
 WORKDIR "/root"
 COPY ./scripts/init .
 RUN chmod +x init
