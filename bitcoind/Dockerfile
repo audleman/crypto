@@ -2,10 +2,11 @@ FROM ubuntu:20.04
 
 # Passed in by docker-compose.yaml
 ARG BITCOIN_VERSION
-ARG HOME
 
-# Pass into container runtime
-ENV HOME $HOME
+# Expose bitcoin ports
+EXPOSE 8332 8333
+
+ENV HOME="/bitcoin"
 
 # Install apt dependencies, cleanup afterwards
 RUN apt update \
@@ -24,18 +25,16 @@ RUN apt update \
         python3 \
         ca-certificates \
         curl \
+        libsqlite3-dev \
     && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR $HOME
 
 # Run build script - downloads and compiles bitcoin
-COPY ./build .
+COPY ./scripts/build .
 RUN chmod +x build && ./build
 
-# Expose bitcoin ports
-EXPOSE 8332 8333
-
 # Let 'er rip
-COPY ./run .
+COPY ./scripts/run .
 RUN chmod +x run
 CMD ["./run"]

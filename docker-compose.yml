@@ -6,16 +6,16 @@ version: "3.9"
 
 services:
   bitcoind:
+    build:
+      context: ./bitcoind
+      args:
+        BITCOIN_VERSION: 22.0  # This is where to specify release version for upgrades
     ports:
       - 8333:8333
-      - 127.0.0.1:8332:8332  # take care to not expose RPC port to the world
+      - 127.0.0.1:8332:8332  # take care to not expose RPC port to the world TODO: docker private network
     volumes:
       - bitcoind-data:/bitcoin/.bitcoin
-    build:
-      context: bitcoind
-      args:
-        BITCOIN_VERSION: 22.0  # How to upgrade bitcoin
-        HOME: /bitcoin
+    restart: on-failure
 
 
 # ------------------------------------------------------------------------------

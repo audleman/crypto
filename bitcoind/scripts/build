@@ -14,7 +14,12 @@ curl -L https://github.com/bitcoin/bitcoin/archive/refs/tags/v$BITCOIN_VERSION.t
 # ------------------------------------------------------------------------------
 
 echo "Building bitcoin source..."
-./autogen.sh 
-./configure --disable-wallet
-make 
+
+# Berkley database for wallet support
+./contrib/install_db4.sh `pwd`
+
+./autogen.sh
+export BDB_PREFIX='/bitcoin/db4'
+./configure --without-gui BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"  #  --disable-wallet
+make -j 4  # use "-j N" for N parallel jobs
 make install
