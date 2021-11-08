@@ -1,12 +1,25 @@
 #!/bin/bash
-set -ex
+set -e
 
 # ------------------------------------------------------------------------------
-# The following steps have to happen during the runtime phase, not build, because
-# the external volume isn't mounted until now. 
+#
+# This script checks the bitcoin data volume for necessary configuration, adding
+# it if not exists.
+#
 # ------------------------------------------------------------------------------
 
-# Create bitcoin.conf if not exists
+# Add a wallet named `wallet`
+if [ ! -d "$HOME/.bitcoin/wallet" ]
+then
+    echo "Wallet not found, creating..."
+    bitcoin-cli createwallet "wallet"
+    # TODO: wallet security
+    # create random password, write to file on volume? 
+    echo "Wallet created!"
+    
+fi
+
+# Add bitcoin.conf, defining operating behavior of our bitcoind daemon
 if [ ! -e "$HOME/.bitcoin/bitcoin.conf" ]
 then
     mkdir -p $HOME/.bitcoin
@@ -27,24 +40,13 @@ rpcbind=:8332
 # RPC username/password
 rpcuser=bitcoinrpcuser
 rpcpassword=`dd if=/dev/urandom bs=33 count=1 2>/dev/null | base64`
+
+# Location of our wallet
+wallet=$HOME/.bitcoin/wallet
 EOF
 
     cat $HOME/.bitcoin/bitcoin.conf
-else
-    echo "Existing bitcoin.conf"
 fi
 
-if [ ! -d "$HOME/.bitcoin/wallet" ]
-then
-    # TODO: create wallet if not exists
-    # bitcoin-cli createwallet "wallet"
-    echo "WARNING: expected wallet but found none"
-else
-    echo "Found wallet 'wallet'"
-fi
-
-# ------------------------------------------------------------------------------
-# Start the daemon process
-# ------------------------------------------------------------------------------
-
-exec bitcoind -wallet="wallet"
+# Use exec to replace this shell with the CMD process
+exec "$@"

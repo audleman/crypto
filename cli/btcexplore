@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import yaml
+from pathlib import Path
+
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+with open(f'{PROJECT_DIR}/docker-compose.yml') as f:
+    compose = yaml.load(f.read(), Loader=yaml.FullLoader)
+SERVICE_LIST = list(compose['services'].keys())
+
+
+class BtcExplore(object):
+    """
+    CLI tool for the BtcExplore project. Usage:
+
+    $ btcexplore
+    """
+
+    def __init__(self):
+        parser = self.build_parser()
+        args = parser.parse_args()
+        args.func(args)
+
+    def build_parser(self):
+        parser = argparse.ArgumentParser(prog='btcexplore', description='BtcExplore command line utility', usage='%(prog)s')
+        subparsers = parser.add_subparsers(title='subcommands', metavar='')
+
+        # --- ssh --------------------------------------------------
+        p = subparsers.add_parser( 'ssh', help='SSH into a container')
+        p.add_argument('service', choices=SERVICE_LIST, help=f'{",".join(SERVICE_LIST)}', nargs='?', default='bitcoind')
+        p.set_defaults(func=self.ssh)
+
+        # --- logs --------------------------------------------------
+        p = subparsers.add_parser( 'logs', help='tail logs of one or more services')
+        p.add_argument('service', choices=SERVICE_LIST + [''], help=f'{",".join(SERVICE_LIST)}', nargs='?', default='')
+        p.set_defaults(func=lambda args: os.system(f'docker-compose logs {args.service} --tail=50 -f'))
+
+        return parser
+        
+    def ssh(self, args):
+        os.system(f'docker-compose --project-directory={PROJECT_DIR} exec {args.service} bash')
+        
+
+    def display_help(self):
+        pass
+
+
+if __name__ == '__main__':
+    r = BtcExplore()

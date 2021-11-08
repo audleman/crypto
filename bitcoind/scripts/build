@@ -2,7 +2,7 @@
 set -ex
 
 # ------------------------------------------------------------------------------
-# Download bitcoin release from github
+# Download
 # ------------------------------------------------------------------------------
 
 echo "Fetching bitcoin version: $BITCOIN_VERSION"
@@ -20,6 +20,22 @@ echo "Building bitcoin source..."
 
 ./autogen.sh
 export BDB_PREFIX='/bitcoin/db4'
-./configure --without-gui BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"  #  --disable-wallet
+./configure --without-gui BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include"
 make -j 4  # use "-j N" for N parallel jobs
 make install
+
+
+# ------------------------------------------------------------------------------
+# Cleanup - important to keep image size down
+# ------------------------------------------------------------------------------
+
+echo "Cleaning up..."
+# Remove some unused but large binaries
+rm /usr/local/bin/test_bitcoin   # 500mb
+rm /usr/local/bin/bench_bitcoin  # 300mb
+
+# Remove source folder to cleanum ~5GB 
+cd /
+rm -rf /bitcoin
+
+echo "Build complete. Happy bitcoining!"

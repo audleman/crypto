@@ -6,9 +6,7 @@ ARG BITCOIN_VERSION
 # Expose bitcoin ports
 EXPOSE 8332 8333
 
-ENV HOME="/bitcoin"
-
-# Install apt dependencies, cleanup afterwards
+# Install apt dependencies, cleanup
 RUN apt update \
     && apt install -y --no-install-recommends \
         build-essential \
@@ -28,13 +26,16 @@ RUN apt update \
         libsqlite3-dev \
     && apt clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR $HOME
-
-# Run build script - downloads and compiles bitcoin
+# Build
+WORKDIR "/bitcoin"
 COPY ./scripts/build .
 RUN chmod +x build && ./build
 
-# Let 'er rip
-COPY ./scripts/run .
-RUN chmod +x run
-CMD ["./run"]
+# Set up an entrypoint script to do pre-run initialization
+WORKDIR "/root"
+COPY ./scripts/init .
+RUN chmod +x init
+ENTRYPOINT ["./init"]
+
+# To the moon!
+CMD ["bitcoind"]

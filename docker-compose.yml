@@ -14,7 +14,7 @@ services:
       - 8333:8333
       - 127.0.0.1:8332:8332  # take care to not expose RPC port to the world TODO: docker private network
     volumes:
-      - bitcoind-data:/bitcoin/.bitcoin
+      - bitcoind-data:/root/.bitcoin
     restart: on-failure
 
 
