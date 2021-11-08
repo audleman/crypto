@@ -14,22 +14,23 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         
-        unprocessed_blocks = Block.objects.filter(processed=False).order_by('height')
-        for block in unprocessed_blocks:
-            print(block)
-            for tx in block.extended_data['tx']:
-                for vout in tx['vout']:
-                    try:
-                        if (
-                            vout['scriptPubKey']['type'] == 'nulldata' or
-                            'OP_RETURN' in vout['scriptPubKey']['asm']
-                        ):
+        print(bitcoinrpc.get_block_hash(708415))
+        # unprocessed_blocks = Block.objects.filter(processed=False).order_by('height')
+        # for block in unprocessed_blocks:
+        #     print(block)
+        #     for tx in block.extended_data['tx']:
+        #         for vout in tx['vout']:
+        #             try:
+        #                 if (
+        #                     vout['scriptPubKey']['type'] == 'nulldata' or
+        #                     'OP_RETURN' in vout['scriptPubKey']['asm']
+        #                 ):
                             
-                            pp(vout)
-                            import ipdb; ipdb.set_trace()
-                    except Exception as e:
-                        pp(e)
-                        import ipdb; ipdb.set_trace()
+        #                     pp(vout)
+        #                     import ipdb; ipdb.set_trace()
+        #             except Exception as e:
+        #                 pp(e)
+        #                 import ipdb; ipdb.set_trace()
                 
                 
                     

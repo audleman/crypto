@@ -1,0 +1,32 @@
+version: "3.9"
+
+# ------------------------------------------------------------------------------
+# Services
+# ------------------------------------------------------------------------------
+
+services:
+  bitcoind:
+    build:
+      context: ./bitcoind
+      args:
+        BITCOIN_VERSION: 22.0  # This is where to specify release version for upgrades
+    ports:
+      - 8333:8333
+      - 127.0.0.1:8332:8332  # take care to not expose RPC port to the world TODO: docker private network
+    volumes:
+      - bitcoind-data:/bitcoin/.bitcoin
+    restart: on-failure
+
+
+# ------------------------------------------------------------------------------
+# Volumes
+# ------------------------------------------------------------------------------
+
+volumes:
+  # Bitcoin data is huge, I have a second disk just for that
+  bitcoind-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcdisk

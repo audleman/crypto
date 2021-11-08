@@ -1,0 +1,50 @@
+#!/bin/bash
+set -ex
+
+# ------------------------------------------------------------------------------
+# The following steps have to happen during the runtime phase, not build, because
+# the external volume isn't mounted until now. 
+# ------------------------------------------------------------------------------
+
+# Create bitcoin.conf if not exists
+if [ ! -e "$HOME/.bitcoin/bitcoin.conf" ]
+then
+    mkdir -p $HOME/.bitcoin
+
+    echo "Creating bitcoin.conf"
+    
+    cat <<EOF > $HOME/.bitcoin/bitcoin.conf
+#---------------------------------------
+# bitcoin.conf
+#---------------------------------------
+# tells bitcoind to accept JSON-RPC commands
+server=1
+
+# Has to accept non-localhost because of Docker networking
+rpcallowip=0.0.0.0/0
+rpcbind=:8332
+
+# RPC username/password
+rpcuser=bitcoinrpcuser
+rpcpassword=`dd if=/dev/urandom bs=33 count=1 2>/dev/null | base64`
+EOF
+
+    cat $HOME/.bitcoin/bitcoin.conf
+else
+    echo "Existing bitcoin.conf"
+fi
+
+if [ ! -d "$HOME/.bitcoin/wallet" ]
+then
+    # TODO: create wallet if not exists
+    # bitcoin-cli createwallet "wallet"
+    echo "WARNING: expected wallet but found none"
+else
+    echo "Found wallet 'wallet'"
+fi
+
+# ------------------------------------------------------------------------------
+# Start the daemon process
+# ------------------------------------------------------------------------------
+
+exec bitcoind -wallet="wallet"
