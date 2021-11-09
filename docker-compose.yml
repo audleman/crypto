@@ -17,7 +17,7 @@ services:
       - 127.0.0.1:8332:8332  # take care to not expose RPC port to the world TODO: docker private network
     volumes:
       - bitcoind-data:/root/.bitcoin
-    restart: on-failure
+    restart: always  # causes container to start on system boot
 
   # --- Go-Ethereum light node
   goeth:
@@ -27,6 +27,7 @@ services:
     volumes:
       - geth-data:/root/.ethereum
     command: "-syncmode light"
+    restart: always  # causes container to start on system boot
 
 
 # ------------------------------------------------------------------------------

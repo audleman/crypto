@@ -3,14 +3,11 @@ set -e
 
 # ------------------------------------------------------------------------------
 #
-# Entrypoint for the container
+# Run `bitcoind` after doing prep work
 #
-# Checks the bitcoin data volume for necessary configuration, initializing 
-# if not exists:
-#   - wallet named 'wallet' exists
-#   - bitcoin.conf is present (RPC and wallet settings)
-#
-# Then simply switches over to `bitcoind`
+# Checks the bitcoin data volume:
+#   - A wallet named 'wallet' should exist
+#   - bitcoin.conf is present (defines our RPC and wallet settings)
 #
 # ------------------------------------------------------------------------------
 
@@ -54,5 +51,5 @@ EOF
     cat $HOME/.bitcoin/bitcoin.conf
 fi
 
-# Start the bitcoin daemon. `exec` will replace the shell process
+# Start the bitcoin daemon. `exec` replaces this shell process
 exec "bitcoind"

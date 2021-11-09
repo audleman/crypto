@@ -29,7 +29,7 @@ class BtcExplore(object):
 
     def build_parser(self):
         desc = 'toolbelt for the btcexplore project'
-        parser = argparse.ArgumentParser(prog='btcexplore', description=desc, usage='%(prog)s')
+        parser = argparse.ArgumentParser(prog='btcexplore', description=desc, usage='%(prog)s subcommand')
         subparsers = parser.add_subparsers(title='subcommands', metavar='')
 
         # --- ssh --------------------------------------------------
@@ -44,9 +44,6 @@ class BtcExplore(object):
         p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} logs --tail={args.lines} -f {args.service}'))
 
         return parser
-        
-    def display_help(self):
-        pass
 
 
 if __name__ == '__main__':
