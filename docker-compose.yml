@@ -14,20 +14,36 @@ services:
         BITCOIN_VERSION: 22.0  # This is where to specify release version for upgrades
     ports:
       - 8333:8333
-      - 127.0.0.1:8332:8332  # take care to not expose RPC port to the world TODO: docker private network
+      # - 127.0.0.1:8332:8332  # exposes RPC to localhost
+    expose:
+      - 8332  # Only expose RPC to other services
     volumes:
       - bitcoind-data:/root/.bitcoin
     restart: always  # causes container to start on system boot
 
-  # --- Go-Ethereum light node
-  goeth:
-    image: ethereum/client-go:stable
-    ports:
-      - 30303:30303
+  # --- Backend
+  backend:
+    build: ./backend
+    command: ./manage.py runserver 0.0.0.0:8000
     volumes:
-      - geth-data:/root/.ethereum
-    command: "-syncmode light"
-    restart: always  # causes container to start on system boot
+      - ./backend:/code
+      - bitcoind-data:/root/.bitcoin
+    ports:
+      - "8000:8000"
+    depends_on:
+      - bitcoind
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+
+  # --- Go-Ethereum light node
+  # goeth:
+  #   image: ethereum/client-go:stable
+  #   ports:
+  #     - 30303:30303
+  #   volumes:
+  #     - geth-data:/root/.ethereum
+  #   command: "-syncmode light"
+  #   restart: always  # causes container to start on system boot
 
 
 # ------------------------------------------------------------------------------

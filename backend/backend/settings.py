@@ -11,9 +11,16 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Docker containers run as root
+if 'root' in os.environ['HOME']:
+    ENVIRONMENT = 'production'
+else:
+    ENVIRONMENT = 'development'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -83,7 +90,7 @@ DATABASES = {
         'NAME': 'btcexplore',
         'USER': 'btcexplore',
         'PASSWORD': '12345',
-        'HOST': 'localhost',
+        'HOST': 'host.docker.internal',
         'PORT': ''
     }
 }
@@ -132,3 +139,8 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CRONJOBS = [
+    # Jobs that run every 2-5 minutes
+    ('*/5 * * * *', 'django.core.management.call_command', ['retrieve_blocks'])
+]

@@ -1,9 +1,12 @@
+base58
+# django-crontab
 django-extensions
+Django>3.0,<4.0
+factory_boy
 ipdb
 ipython
+jsonschema
 psycopg2
 python-bitcoinrpc
+pyyaml
 retry
-base58
-factory_boy
-jsonschema

@@ -6,10 +6,11 @@ import configparser
 
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 from retry import retry
+from backend.settings import ENVIRONMENT
 
 
-BITCOIN_CONF_LOCATION = '/media/btcdisk/bitcoin.conf'
-RPC_NODE_IP = '127.0.0.1'
+BITCOIN_CONF_LOCATION = '/root/.bitcoin/bitcoin.conf'
+RPC_NODE_IP = 'bitcoind'
 RPC_PORT = '8332'
 
 def build_rpc_client():
@@ -21,13 +22,10 @@ def build_rpc_client():
     config.read_string(file_content)
     rpcuser = config['s']['rpcuser']
     rpcpassword = config['s']['rpcpassword']
-
     # Instantiate client
     return AuthServiceProxy(f'http://{rpcuser}:{rpcpassword}@{RPC_NODE_IP}:{RPC_PORT}')
-
-
-client = build_rpc_client()
-
+if ENVIRONMENT == 'production':
+    client = build_rpc_client()
 
 @retry(tries=3)
 def get_block_hash(block_height):

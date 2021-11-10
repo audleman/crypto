@@ -15,9 +15,7 @@ SERVICE_LIST = [s for s in compose['services'].keys()]
 
 
 class BtcExplore(object):
-    """
-    CLI toolbelt for the BtcExplore project
-    """
+
     def __init__(self):
         parser = self.build_parser()
         args = parser.parse_args()
@@ -29,19 +27,23 @@ class BtcExplore(object):
 
     def build_parser(self):
         desc = 'toolbelt for the btcexplore project'
-        parser = argparse.ArgumentParser(prog='btcexplore', description=desc, usage='%(prog)s subcommand')
+        parser = argparse.ArgumentParser(prog='btcexplore', description=desc)
         subparsers = parser.add_subparsers(title='subcommands', metavar='')
 
         # --- ssh --------------------------------------------------
-        p = subparsers.add_parser('ssh', help='ssh into a service container')
-        p.add_argument('service', choices=SERVICE_LIST, help=f'{",".join(SERVICE_LIST)}', nargs='?', default='bitcoind')
+        p = subparsers.add_parser('ssh', help='ssh into a running service container')
+        p.add_argument('service', choices=SERVICE_LIST, nargs='?', default='bitcoind')
         p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} exec {args.service} bash'))
 
         # --- logs --------------------------------------------------
-        p = subparsers.add_parser('logs', help='tail logs of one or more services')
-        p.add_argument('service', choices=SERVICE_LIST + [''], nargs='?', default='')
+        p = subparsers.add_parser(
+            'logs', 
+            help='tail logs of one or more running service containers',
+            description='follow the logs of one or more running services. Don\'t specify any services to tail all running services. Specify one or more to constrain the list',
+            usage='\n\tbtcexplore logs\n\tbtcexplore logs service_name1 service_name2')
+        p.add_argument('services', choices=SERVICE_LIST + [''], nargs='?', default='')
         p.add_argument('-n', '--lines', default=50, help='output the last n lines before starting follow')
-        p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} logs --tail={args.lines} -f {args.service}'))
+        p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} logs --tail={args.lines} -f {args.services}'))
 
         return parser
 
