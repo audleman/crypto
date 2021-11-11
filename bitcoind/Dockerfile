@@ -30,7 +30,6 @@ RUN chmod +x build && ./build
 # --- 
 # Keep image size down by starting from ubuntu base again, only copying
 # over binaries from the builder stage
-# ---
 from ubuntu:20.04
 
 COPY --from=builder /usr/local/bin/ /usr/local/bin/

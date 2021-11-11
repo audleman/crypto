@@ -17,7 +17,8 @@ then
     echo "Wallet not found, creating..."
     bitcoin-cli createwallet "wallet"
     # TODO: wallet security
-    # create random password, write to file on volume? 
+    # create random password, write to file on volume? Echo out, you have to 
+    # catch it or you're fucked? Just let the user run this step manually?
     echo "Wallet created!"
     
 fi

@@ -29,19 +29,22 @@ if ENVIRONMENT == 'production':
 
 @retry(tries=3)
 def get_block_hash(block_height):
+    client = build_rpc_client()
     return client.getblockhash(block_height)
 
 
-@retry(tries=3)
+@retry(tries=6, delay=1, backoff=2)
 def get_block(block_hash, verbosity=1):
+    client = build_rpc_client()
     block = client.getblock(block_hash, verbosity)
     # Cleaning
     block['difficulty'] = float(block['difficulty'])
     return block
 
 
-@retry(tries=3)
+@retry(tries=10)
 def get_transaction(txid, block_hash):
+    client = build_rpc_client()
     trans = client.getrawtransaction(txid, True, block_hash)
     # No cleaning necessary?
     return trans

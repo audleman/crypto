@@ -4,6 +4,9 @@ version: "3.9"
 # Services
 # ------------------------------------------------------------------------------
 
+# Grafana
+# sudo systemctl status grafana-agent.service
+
 services:
 
   # --- Bitcoin daemon
@@ -11,7 +14,7 @@ services:
     build:
       context: ./bitcoind
       args:
-        BITCOIN_VERSION: 22.0  # This is where to specify release version for upgrades
+        BITCOIN_VERSION: 22.0  # Update to install new versions of bitcoin core
     ports:
       - 8333:8333
       # - 127.0.0.1:8332:8332  # exposes RPC to localhost
