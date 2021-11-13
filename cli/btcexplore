@@ -37,12 +37,12 @@ class BtcExplore(object):
 
         # --- logs --------------------------------------------------
         p = subparsers.add_parser(
-            'logs', 
+            'logs',
             help='tail logs of one or more running service containers',
             description='follow the logs of one or more running services. Don\'t specify any services to tail all running services. Specify one or more to constrain the list',
             usage='\n\tbtcexplore logs\n\tbtcexplore logs service_name1 service_name2')
         p.add_argument('services', choices=SERVICE_LIST + [''], nargs='?', default='')
-        p.add_argument('-n', '--lines', default=50, help='output the last n lines before starting follow')
+        p.add_argument('-n', '--lines', default=20, help='output the last n lines before starting follow')
         p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} logs --tail={args.lines} -f {args.services}'))
 
         return parser
