@@ -22,21 +22,23 @@ services:
       - 8332  # Only expose RPC to other services
     volumes:
       - bitcoind-data:/root/.bitcoin
-    restart: always  # causes container to start on system boot
+    restart: always  # docker will restart on system boot
 
   # --- Backend
   backend:
     build: ./backend
-    command: ./manage.py runserver 0.0.0.0:8000
+    # command: ./manage.py runserver 0.0.0.0:8000
+    command: ./manage.py trans
     volumes:
       - ./backend:/code
       - bitcoind-data:/root/.bitcoin
     ports:
-      - "8000:8000"
+      - 8000:8000
     depends_on:
       - bitcoind
     extra_hosts:
-      - "host.docker.internal:172.17.0.1"
+      - host.docker.internal:172.17.0.1
+    restart: always
 
   # --- Go-Ethereum light node
   # goeth:
@@ -54,9 +56,10 @@ services:
 # ------------------------------------------------------------------------------
 
 volumes:
-  # Running a light node, just use the default /var/lib/docker/volumes location
+  # Ethereum volume. Since I'm running a light node it won't use much space, 
+  # Just use the default /var/lib/docker/volumes location
   geth-data:
-  # Bitcoin data is huge, I have a second disk just for that
+  # Bitcoin core volume. It's large, so I mount an external 1TB drive
   bitcoind-data:
     driver: local
     driver_opts:
