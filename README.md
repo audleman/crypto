@@ -10,13 +10,13 @@ bitcoin! This projects is composed of three components:
 
 These run as docker containers and are orchestrated via docker-compose
 
-# Setup
+## Setup
 
 1. Install docker
 2. Install docker-compose
 
 
-# Run
+## Run
 Starts the bitcoin daemon, backend
 ```
 $ cd crypto/bitcoin
