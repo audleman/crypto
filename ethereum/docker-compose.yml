@@ -1,0 +1,29 @@
+version: "3.9"
+
+# ------------------------------------------------------------------------------
+# Services
+# ------------------------------------------------------------------------------
+
+# Grafana
+# sudo systemctl status grafana-agent.service
+
+services:
+  # --- Go-Ethereum light node
+  goeth:
+    image: ethereum/client-go:stable
+    ports:
+      - 30303:30303
+    volumes:
+      - geth-data:/root/.ethereum
+    command: "-syncmode light"
+    restart: always  # have container start on system boot
+
+
+# ------------------------------------------------------------------------------
+# Volumes
+# ------------------------------------------------------------------------------
+
+volumes:
+  # Ethereum volume. Since I'm running a light node it won't use much space, 
+  # Just use the default /var/lib/docker/volumes location
+  geth-data:

@@ -40,25 +40,11 @@ services:
       - host.docker.internal:172.17.0.1
     restart: always
 
-  # --- Go-Ethereum light node
-  # goeth:
-  #   image: ethereum/client-go:stable
-  #   ports:
-  #     - 30303:30303
-  #   volumes:
-  #     - geth-data:/root/.ethereum
-  #   command: "-syncmode light"
-  #   restart: always  # causes container to start on system boot
-
-
 # ------------------------------------------------------------------------------
 # Volumes
 # ------------------------------------------------------------------------------
 
 volumes:
-  # Ethereum volume. Since I'm running a light node it won't use much space, 
-  # Just use the default /var/lib/docker/volumes location
-  geth-data:
   # Bitcoin core volume. It's large, so I mount an external 1TB drive
   bitcoind-data:
     driver: local

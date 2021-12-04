@@ -7,14 +7,14 @@ from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 # Peg to project dir so we can run cli tool from anywhere
-DOCKER_COMPOSE = f'docker-compose --project-directory={PROJECT_DIR}'
+DOCKER_COMPOSE = f'docker-compose --project-directory={PROJECT_DIR}/bitcoin'
 # Parse service yaml file
-with open(f'{PROJECT_DIR}/docker-compose.yml') as f:
+with open(f'{PROJECT_DIR}/bitcoin/docker-compose.yml') as f:
     compose = yaml.load(f.read(), Loader=yaml.FullLoader)
 SERVICE_LIST = [s for s in compose['services'].keys()]
 
 
-class BtcExplore(object):
+class CryptoCLI(object):
 
     def __init__(self):
         parser = self.build_parser()
@@ -26,8 +26,8 @@ class BtcExplore(object):
             print('')
 
     def build_parser(self):
-        desc = 'toolbelt for the btcexplore project'
-        parser = argparse.ArgumentParser(prog='btcexplore', description=desc)
+        desc = 'toolbelt for the crypto project'
+        parser = argparse.ArgumentParser(prog='crypto', description=desc)
         subparsers = parser.add_subparsers(title='subcommands', metavar='')
 
         # --- ssh --------------------------------------------------
@@ -40,7 +40,7 @@ class BtcExplore(object):
             'logs',
             help='tail logs of one or more running service containers',
             description='follow the logs of one or more running services. Don\'t specify any services to tail all running services. Specify one or more to constrain the list',
-            usage='\n\tbtcexplore logs\n\tbtcexplore logs service_name1 service_name2')
+            usage='\n\tcrypto logs\n\tcrypto logs service_name1 service_name2')
         p.add_argument('services', choices=SERVICE_LIST + [''], nargs='?', default='')
         p.add_argument('-n', '--lines', default=20, help='output the last n lines before starting follow')
         p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} logs --tail={args.lines} -f {args.services}'))
@@ -49,4 +49,4 @@ class BtcExplore(object):
 
 
 if __name__ == '__main__':
-    r = BtcExplore()
+    r = CryptoCLI()
