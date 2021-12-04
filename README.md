@@ -1,6 +1,8 @@
-# btcexplore
+Fun with crypto! My personal development around Bitcoin and Ethereum
 
-Fun with bitcoin! This projects is composed of three components:
+# Bitcoin
+
+bitcoin! This projects is composed of three components:
 
 - A full Bitcoin node
 - Backend, written in Django
@@ -15,7 +17,12 @@ These run as docker containers and are orchestrated via docker-compose
 
 
 # Run
-
+Starts the bitcoin daemon, backend
 ```
+$ cd crypto/bitcoin
 $ docker-compose up
 ```
+
+# Ethereum
+
+Runs a light node, validator TBD
