@@ -7,7 +7,9 @@ from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 # Peg to project dir so we can run cli tool from anywhere
-DOCKER_COMPOSE = f'docker-compose --project-directory={PROJECT_DIR}/bitcoin'
+DC_BTC = f'docker-compose --project-directory={PROJECT_DIR}/bitcoin'
+DC_ETH = f'docker-compose --project-directory={PROJECT_DIR}/ethereum'
+
 # Parse service yaml file
 with open(f'{PROJECT_DIR}/bitcoin/docker-compose.yml') as f:
     compose = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -33,7 +35,11 @@ class CryptoCLI(object):
         # --- ssh --------------------------------------------------
         p = subparsers.add_parser('ssh', help='ssh into a running service container')
         p.add_argument('service', choices=SERVICE_LIST, nargs='?', default='bitcoind')
-        p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} exec {args.service} bash'))
+        p.set_defaults(func=lambda args: os.system(f'{DC_BTC} exec {args.service} bash'))
+        
+        # --- ps --------------------------------------------------
+        p = subparsers.add_parser('ps', help='list running containers')
+        p.set_defaults(func=self.ps)
 
         # --- logs --------------------------------------------------
         p = subparsers.add_parser(
@@ -43,9 +49,14 @@ class CryptoCLI(object):
             usage='\n\tcrypto logs\n\tcrypto logs service_name1 service_name2')
         p.add_argument('services', choices=SERVICE_LIST + [''], nargs='?', default='')
         p.add_argument('-n', '--lines', default=20, help='output the last n lines before starting follow')
-        p.set_defaults(func=lambda args: os.system(f'{DOCKER_COMPOSE} logs --tail={args.lines} -f {args.services}'))
+        p.set_defaults(func=lambda args: os.system(f'{DC_BTC} logs --tail={args.lines} -f {args.services}'))
 
         return parser
+    
+    def ps(self, args):
+        os.chdir(PROJECT_DIR)
+        os.system(f'{DC_BTC} ps') 
+        os.system(f'{DC_ETH} ps')        
 
 
 if __name__ == '__main__':
