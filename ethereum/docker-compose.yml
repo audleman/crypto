@@ -4,19 +4,44 @@ version: "3.9"
 # Services
 # ------------------------------------------------------------------------------
 
-# Grafana
-# sudo systemctl status grafana-agent.service
+# Bare bones validator setup process
+# https://www.cleverti.com/blog/how-to-become-an-eth2-validator-step-by-step-practical-tutorial/
+
+# Will need to run this to generate validator keys
+# https://github.com/ethereum/eth2.0-deposit-cli
+
+# Reset geth database
+# docker-compose run goeth removedb
 
 services:
+  #
   # --- Go-Ethereum light node
+  # https://geth.ethereum.org/docs/install-and-build/installing-geth
+  #
   goeth:
     image: ethereum/client-go:stable
     ports:
-      - 30303:30303
+      - 30303:30303  # TCP and UDP, used by the P2P protocol running the network
+    expose:
+      - 8545  # TCP, used by the HTTP based JSON RPC API
     volumes:
       - geth-data:/root/.ethereum
-    command: "-syncmode light"
-    restart: always  # have container start on system boot
+    command: "-syncmode snap --http --http.addr 0.0.0.0 --http.vhosts '*'"
+    restart: always
+  
+  #
+  # --- Beacon chain
+  #
+  beacon:
+    image: gcr.io/prysmaticlabs/prysm/beacon-chain:stable
+    ports:
+      - "4000:4000"
+      - "13000:13000"
+      - "12000:12000/udp"
+    volumes:
+      - beacon-chain-data:/data
+    command: "--datadir=/data --rpc-host=0.0.0.0 --monitoring-host=0.0.0.0 --http-web3provider=http://goeth:8545 --accept-terms-of-use"
+    restart: always
 
 
 # ------------------------------------------------------------------------------
@@ -24,6 +49,17 @@ services:
 # ------------------------------------------------------------------------------
 
 volumes:
-  # Ethereum volume. Since I'm running a light node it won't use much space, 
-  # Just use the default /var/lib/docker/volumes location
+  # Pretty big, use 4TB disk
   geth-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcbigdisk/geth
+  # Beacon chain volume. How big is 
+  beacon-chain-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcbigdisk/beacon
