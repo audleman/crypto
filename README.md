@@ -1,7 +1,7 @@
 Fun with crypto! My personal development around Bitcoin and Ethereum
 
 # Bitcoin
-
+Eyyy yooooo!! 
 bitcoin! This projects is composed of three components:
 
 - A full Bitcoin node
