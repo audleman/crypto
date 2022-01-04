@@ -10,14 +10,16 @@ version: "3.9"
 # Will need to run this to generate validator keys
 # https://github.com/ethereum/eth2.0-deposit-cli
 
-# Reset geth database
-# docker-compose run goeth removedb
-
 services:
   #
-  # --- Go-Ethereum light node
+  # --- Go-Ethereum
+  # https://geth.ethereum.org/docs/interface/command-line-options
   # https://geth.ethereum.org/docs/install-and-build/installing-geth
   #
+  # Reset database
+  #   docker-compose run goeth removedb
+  # Prune db https://gist.github.com/yorickdowne/3323759b4cbf2022e191ab058a4276b2
+  #   docker-compose run goeth snapshot prune-state
   goeth:
     image: ethereum/client-go:stable
     ports:
@@ -31,6 +33,7 @@ services:
   
   #
   # --- Beacon chain
+  # https://docs.prylabs.network/docs/install/install-with-docker
   #
   beacon:
     image: gcr.io/prysmaticlabs/prysm/beacon-chain:stable
