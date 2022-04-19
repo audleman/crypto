@@ -1,3 +1,6 @@
 [submodule "bitcoin/lightning/lnd"]
 	path = bitcoin/lightning/lnd
 	url = git@github.com:lightningnetwork/lnd.git
+[submodule "bitcoin/rtl"]
+	path = bitcoin/rtl
+	url = git@github.com:Ride-The-Lightning/RTL.git

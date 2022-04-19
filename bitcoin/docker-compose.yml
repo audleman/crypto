@@ -14,15 +14,13 @@ services:
     build:
       context: ./bitcoind
       args:
-        VERSION: 22.0  # Update to install new versions of bitcoin core
-    # Ports visible to host
+        VERSION: ${BTD_VERSION}
     ports:
-      - ${BTD_INCOMING_CONN_PORT}
-    # Ports visible to docker network
+      - 8333:8333  # Incoming connections port
     expose:
-      - ${BTD_RPC_PORT}
-      - ${BTD_ZMQ_TX_PORT}
-      - ${BTD_ZMQ_BLOCK_PORT}
+      - 1009  # RPC
+      - 28332 # ZMQ txs
+      - 28333 # ZMQ blocks
     volumes:
       - bitcoind-data:/root/.bitcoin
     restart: always
@@ -48,8 +46,8 @@ services:
       "--bitcoind.rpcpass=${BTD_RPC_PASSWORD}"
     ]
     ports:
-      - 10009  # RPC
-      - 8080  # REST
+      - 10009:1009  # RPC
+      - 8080:8080  # REST
     volumes:
       - lnd-data:/root/.lnd
       # Lightning shares a few resources with rtl
@@ -60,15 +58,17 @@ services:
   # --- lightning dashboard
   # list of other dashboards: https://gist.github.com/bretton/163ff7b5186cfc082342d90cc671461b
   rtl:
-    image: shahanafarooqui/rtl:0.12.0
+    build: 
+      context: rtl
+      dockerfile: dockerfiles/Dockerfile
     depends_on:
       - lnd
     volumes:
-      - lnd-shared:/shared:ro
-      - rtl-data:/database
+      - lnd-data:/root/.lnd  # NOOOOOOO!!!
+      - lnd-shared:/shared
+      - rtl-data:/data
     ports:
-      - 3000
-    # command: ["node", "rtl"]
+      - 3000:3000
     environment:
       PORT: 3000
       HOST: 0.0.0.0
@@ -83,7 +83,8 @@ services:
       LOGOUT_REDIRECT_LINK: ''
       RTL_CONFIG_PATH: /RTL
       BITCOIND_CONFIG_PATH: ''
-      CHANNEL_BACKUP_PATH: /shared/lnd/backup
+      CHANNEL_BACKUP_PATH: /data/rtl_backups
+      THEME_MODE: NIGHT
     
   # --- Backend
   # backend:
