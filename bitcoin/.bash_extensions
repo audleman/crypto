@@ -1,0 +1,10 @@
+# To use, add the following line to your .bash_aliases 
+#
+# source ~/crypto/bitcoin/.bash_extensions
+proj_dir=$(realpath "$(dirname "${BASH_SOURCE[0]}")")
+
+# Load sensitive variables
+source $proj_dir/bitcoind/.secrets
+
+# Add our bin folder to the path
+PATH=$proj_dir/bin:$PATH

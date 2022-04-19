@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+proj_dir=$(realpath $(dirname "$(dirname "${BASH_SOURCE[0]}")"))
+
+docker-compose --project-directory=$proj_dir exec bitcoind bitcoin-cli \
+  -rpcuser=$BTD_RPC_USER \
+  -rpcpassword=$BTD_RPC_PASSWORD \
+  "$@"

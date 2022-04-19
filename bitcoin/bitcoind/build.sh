@@ -4,8 +4,8 @@ set -ex
 # Download
 # ------------------------------------------------------------------------------
 
-echo "Fetching bitcoin version: $BITCOIN_VERSION"
-curl -L https://github.com/bitcoin/bitcoin/archive/refs/tags/v$BITCOIN_VERSION.tar.gz | tar -zx --strip-components=1
+echo "Fetching bitcoin version: $VERSION"
+curl -L https://github.com/bitcoin/bitcoin/archive/refs/tags/v$VERSION.tar.gz | tar -zx --strip-components=1
 
 
 

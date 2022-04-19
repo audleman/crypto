@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+proj_dir=$(realpath $(dirname "$(dirname "${BASH_SOURCE[0]}")"))
+
+docker-compose --project-directory=$proj_dir exec lnd lncli \
+    --tlscertpath /root/shared/tls.cert \
+    --macaroonpath /root/shared/admin.macaroon \
+    "$@"

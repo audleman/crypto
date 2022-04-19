@@ -1,0 +1,3 @@
+[submodule "bitcoin/lightning/lnd"]
+	path = bitcoin/lightning/lnd
+	url = git@github.com:lightningnetwork/lnd.git

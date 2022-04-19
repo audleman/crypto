@@ -1,44 +1,107 @@
 version: "3.9"
 
+# Grafana
+# sudo systemctl status grafana-agent.service
+
+
 # ------------------------------------------------------------------------------
 # Services
 # ------------------------------------------------------------------------------
 
-# Grafana
-# sudo systemctl status grafana-agent.service
-
 services:
-
   # --- Bitcoin daemon
   bitcoind:
     build:
       context: ./bitcoind
       args:
-        BITCOIN_VERSION: 22.0  # Update to install new versions of bitcoin core
+        VERSION: 22.0  # Update to install new versions of bitcoin core
+    # Ports visible to host
     ports:
-      - 8333:8333
-      # - 127.0.0.1:8332:8332  # exposes RPC to localhost
+      - ${BTD_INCOMING_CONN_PORT}
+    # Ports visible to docker network
     expose:
-      - 8332  # Only expose RPC to other services
+      - ${BTD_RPC_PORT}
+      - ${BTD_ZMQ_TX_PORT}
+      - ${BTD_ZMQ_BLOCK_PORT}
     volumes:
       - bitcoind-data:/root/.bitcoin
-    restart: always  # docker will restart on system boot
+    restart: always
+    command: [
+      "bitcoind",
+      "-rpcuser=${BTD_RPC_USER}",
+      "-rpcpassword=${BTD_RPC_PASSWORD}",
+      "-conf=/root/bitcoin.conf"
+    ]
 
-  # --- Backend
-  backend:
-    build: ./backend
-    # command: ./manage.py runserver 0.0.0.0:8000
-    command: ./manage.py trans
-    volumes:
-      - ./backend:/code
-      - bitcoind-data:/root/.bitcoin
+  # --- Lightning
+  # https://github.com/lightningnetwork/lnd
+  lnd:
+    # Builds lnd from source using the Dockerfile they include
+    build:
+      context: ./lightning
+      args:
+        checkout: master
+    command: [
+      "lnd",
+      "--configfile=/root/lnd.conf",
+      "--bitcoind.rpcuser=${BTD_RPC_USER}",
+      "--bitcoind.rpcpass=${BTD_RPC_PASSWORD}"
+    ]
     ports:
-      - 8000:8000
+      - 10009  # RPC
+      - 8080  # REST
+    volumes:
+      - lnd-data:/root/.lnd
+      # Lightning shares a few resources with rtl
+      - lnd-shared:/root/shared
     depends_on:
       - bitcoind
-    extra_hosts:
-      - host.docker.internal:172.17.0.1
-    restart: always
+
+  # --- lightning dashboard
+  # list of other dashboards: https://gist.github.com/bretton/163ff7b5186cfc082342d90cc671461b
+  rtl:
+    image: shahanafarooqui/rtl:0.12.0
+    depends_on:
+      - lnd
+    volumes:
+      - lnd-shared:/shared:ro
+      - rtl-data:/database
+    ports:
+      - 3000
+    # command: ["node", "rtl"]
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
+      MACAROON_PATH: /shared
+      LN_SERVER_URL: https://lnd:8080
+      CONFIG_PATH: ''
+      LN_IMPLEMENTATION: LND
+      SWAP_SERVER_URL: https://lnd:8081
+      SWAP_MACAROON_PATH: /shared
+      RTL_SSO: 0
+      RTL_COOKIE_PATH: ''
+      LOGOUT_REDIRECT_LINK: ''
+      RTL_CONFIG_PATH: /RTL
+      BITCOIND_CONFIG_PATH: ''
+      CHANNEL_BACKUP_PATH: /shared/lnd/backup
+    
+  # --- Backend
+  # backend:
+  #   build: ./backend
+  #   # command: ./manage.py runserver 0.0.0.0:8000
+  #   command: ./manage.py trans
+  #   volumes:
+  #     - ./backend:/code
+  #   environment:
+  #     - BTD_RPC_USER
+  #     - BTD_RPC_PASSWORD
+  #   ports:
+  #     - 8000:8000
+  #   depends_on:
+  #     - bitcoind
+  #   extra_hosts:
+  #     - host.docker.internal:172.17.0.1
+  #   restart: always
 
 # ------------------------------------------------------------------------------
 # Volumes
@@ -52,3 +115,21 @@ volumes:
       o: bind
       type: none
       device: /media/btcdisk
+  lnd-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcbigdisk/lnd
+  lnd-shared:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcbigdisk/lnd-shared
+  rtl-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcbigdisk/rtl

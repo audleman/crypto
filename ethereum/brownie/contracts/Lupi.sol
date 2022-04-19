@@ -1,4 +1,11 @@
 // SPDX-License-Identifier: MIT
+/*
+    LUPI - Least Unpicked Positive Integer
+
+    LUPI is a game where participants pick an integer between 1-100. The 
+    person who picks the smallest number that nobody else picked wins. 
+
+*/
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
