@@ -1,12 +1,14 @@
-Fun with crypto! My personal development around Bitcoin and Ethereum
+My personal development around Bitcoin and Ethereum
 
 # Bitcoin
-Eyyy yooooo!! 
-bitcoin! This projects is composed of three components:
 
-- A full Bitcoin node
-- Backend, written in Django
-- Frontent, written in react
+A container-orchestrated setup for running bitcoin + lightning
+
+- A full Bitcoin node, built from source
+- Backend, written in Django 
+- Lightning node
+- Ride the Lightning (RTL) admin interface for Lightning
+
 
 These run as docker containers and are orchestrated via docker-compose
 
