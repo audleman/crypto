@@ -5,22 +5,29 @@
 #  This is a lightweight, easy to run bitcoin stack using Docker Compose. I
 #  chose compose for this project because:
 #   - Kubernetes is overkill for something this lightweight
-#   - Docker compose provides nearly everything we need
-#   - I wanted to expand my overall container knowledge
-#   - Single command `docker-compose up` and the entire cluster is running
+#   - I wanted to expand my overall Docker / container knowledge
+#   - Docker Compose provides a brilliant locally networked environment for a small, static 
+#     set of hosted containers
+#   - Single command `docker-compose up` and the entire cluster is running, failsafe, and auditable
 #
 #   Benefits of this approach
 #   - Isolated networking - almost all ports are constrained to the private, local
 #     docker network. For instance, the Bitcoin RPC port is not reachable from
-#     the web. This reduces the attack vector significantly
+#     the web. This reduces the attack vector at the network level. 
 #   - Simple yet effective secret management - Secrets are defined in the `.env` file, and this compose
 #     file shares them between pods using environment variables. This:
 #       1. Prevents pods from needing to access the data folders of other pods (e.g. 
 #          Lightning has no access to the bitcoind data directory), minimizing attack vector
 #       2. Prevents the need to hard-code secrets in any Dockerfile, or duplicate them, copy them, etc. 
-#     This is perfect for a small home project, though ultimately too simple for production.
-#     A more robust system would use Hashicorp Vault, AWS Key Management, or hop to Kubernetes
-#     for its integrated solution
+#       3. This is perfect for a small home project, though ultimately too simple for production.
+#          A more robust system would use Hashicorp Vault, AWS Key Management, or hop to Kubernetes
+#          for its integrated solution
+#   - Provides uptime via `restart: always`. A super simple process manager utilizing
+#     the underlying Docker technology
+#   - Nice process monitoring, e.g. tailing logs. See the `cli` folder for my integration
+#   - Volumes allow us to easily map external hard drives, necessary for hosting
+#     the blockchain. I've got a 1TB for the raw blockchain, and a 4TB drive for
+#     my blockchain exporer `backend` project. 
 # 
 # ----------------------------------------------------------------------------
 
