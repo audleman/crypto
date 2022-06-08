@@ -2,5 +2,5 @@
 	path = bitcoin/lightning/lnd
 	url = git@github.com:lightningnetwork/lnd.git
 [submodule "bitcoin/rtl"]
-	path = bitcoin/rtl
+	path = bitcoin/lnd_dashboard/rtl
 	url = git@github.com:Ride-The-Lightning/RTL.git

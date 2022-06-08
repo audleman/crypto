@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+docker-compose --project-directory=$(_project_dir) run lndconnect "$@"

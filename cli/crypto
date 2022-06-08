@@ -6,10 +6,10 @@ import yaml
 from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-# Peg to project dir so we can run cli tool from anywhere
-DC_BTC = f'docker-compose --project-directory={PROJECT_DIR}/bitcoin'
-DC_ETH = f'docker-compose --project-directory={PROJECT_DIR}/ethereum'
 
+# Peg to project dir so we can run cli tool from anywhere
+DC_BTC = f'docker-compose --file={PROJECT_DIR}/bitcoin/docker-compose.yml'
+DC_ETH = f'docker-compose --file={PROJECT_DIR}/ethereum/docker-compose.yml'
 # Parse service yaml file
 with open(f'{PROJECT_DIR}/bitcoin/docker-compose.yml') as f:
     compose = yaml.load(f.read(), Loader=yaml.FullLoader)
@@ -47,9 +47,9 @@ class CryptoCLI(object):
             help='tail logs of one or more running service containers',
             description='follow the logs of one or more running services. Don\'t specify any services to tail all running services. Specify one or more to constrain the list',
             usage='\n\tcrypto logs\n\tcrypto logs service_name1 service_name2')
-        p.add_argument('services', choices=SERVICE_LIST + [''], nargs='?', default='')
+        p.add_argument('services', choices=SERVICE_LIST + [''], nargs='*', default='')
         p.add_argument('-n', '--lines', default=20, help='output the last n lines before starting follow')
-        p.set_defaults(func=lambda args: os.system(f'{DC_BTC} logs --tail={args.lines} -f {args.services}'))
+        p.set_defaults(func=lambda args: os.system(f'{DC_BTC} logs --tail={args.lines} -f {" ".join(args.services)}'))
 
         return parser
     

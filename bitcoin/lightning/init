@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+if [ -e /tmp/lnd.conf ]; then
+    echo "Installing lnd.conf"
+    mv $TMP_DIR/lnd.conf $HOME/.lnd/lnd.conf
+fi
+
+echo "-----------------------------------------------"
+cat $HOME/.lnd/lnd.conf
+
+echo "-----------------------------------------------"
+echo "Launching lnd daemon"
+exec lnd "$@"

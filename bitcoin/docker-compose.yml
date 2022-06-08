@@ -9,106 +9,143 @@ version: "3.9"
 # ------------------------------------------------------------------------------
 
 services:
-  # --- Bitcoin daemon
-  bitcoind:
-    build:
-      context: ./bitcoind
-      args:
-        VERSION: ${BTD_VERSION}
+
+  # --- Tor --------------------------------------------------------------------
+  # WIP - hide everything behind a TOR relay node 
+  # https://stopanddecrypt.medium.com/running-bitcoin-lightning-nodes-over-the-tor-network-2021-edition-489180297d5
+  tor:
+    image: thetorproject/obfs4-bridge:latest
+    environment:
+      # Exit with an error message if OR_PORT is unset or empty.
+      - OR_PORT=${OR_PORT:?Env var OR_PORT is not set.}
+      # Exit with an error message if PT_PORT is unset or empty.
+      - PT_PORT=${PT_PORT:?Env var PT_PORT is not set.}
+      # Exit with an error message if EMAIL is unset or empty.
+      - EMAIL=${EMAIL:?Env var EMAIL is not set.}
+      # Nickname with default value: "DockerObfs4Bridge"
+      - NICKNAME=${NICKNAME:-DockerObfs4Bridge}
+    volumes:
+      - tor-data:/var/lib/tor
     ports:
-      - 8333:8333  # Incoming connections port
+      - ${OR_PORT}:${OR_PORT}
+      - ${PT_PORT}:${PT_PORT}
+    # restart: always
+
+  # --- Bitcoin daemon ---------------------------------------------------------
+  #
+  # Full Bitcoin node. Wrote my own Dockerfile that downloads from
+  # Github and builds from source. 
+  #
+  # ----------------------------------------------------------------------------
+  bitcoind:
+    command: [
+      "init",
+      "-rpcuser=${BTD_RPC_USER}",
+      "-rpcpassword=${BTD_RPC_PASSWORD}"
+    ]
+    ports:
+      - 8333:8333  # Incoming connections
     expose:
-      - 1009  # RPC
-      - 28332 # ZMQ txs
-      - 28333 # ZMQ blocks
+      - 1009       # RPC
+      - 28332      # ZMQ txs
+      - 28333      # ZMQ blocks
     volumes:
       - bitcoind-data:/root/.bitcoin
+    build:
+      context: bitcoind
+      args:
+        VERSION: ${BTD_VERSION}
     restart: always
-    command: [
-      "bitcoind",
-      "-rpcuser=${BTD_RPC_USER}",
-      "-rpcpassword=${BTD_RPC_PASSWORD}",
-      "-conf=/root/bitcoin.conf"
-    ]
-
-  # --- Lightning
+      
+  # --- Lightning --------------------------------------------------------------
+  #
   # https://github.com/lightningnetwork/lnd
+  # 
+  # ----------------------------------------------------------------------------
   lnd:
-    # Builds lnd from source using the Dockerfile they include
+    command: [
+      "init",
+      "--bitcoind.rpcuser=${BTD_RPC_USER}",
+      "--bitcoind.rpcpass=${BTD_RPC_PASSWORD}"
+    ] 
+    ports:
+      - 10009:10009  # RPC
+      - 8080:8080    # REST
+    volumes:
+      - lnd-data:/root/.lnd
+    # Builds lnd from source using their Dockerfile
     build:
       context: ./lightning
       args:
         checkout: master
-    command: [
-      "lnd",
-      "--configfile=/root/lnd.conf",
-      "--bitcoind.rpcuser=${BTD_RPC_USER}",
-      "--bitcoind.rpcpass=${BTD_RPC_PASSWORD}"
-    ]
-    ports:
-      - 10009:1009  # RPC
-      - 8080:8080  # REST
-    volumes:
-      - lnd-data:/root/.lnd
-      # Lightning shares a few resources with rtl
-      - lnd-shared:/root/shared
+    restart: always
     depends_on:
       - bitcoind
 
-  # --- lightning dashboard
+  # --- Ride The Lightning - lightning dashboard -------------------------------
+  # Nice admin interface for my lightning node
   # list of other dashboards: https://gist.github.com/bretton/163ff7b5186cfc082342d90cc671461b
   rtl:
-    build: 
-      context: rtl
-      dockerfile: dockerfiles/Dockerfile
-    depends_on:
-      - lnd
-    volumes:
-      - lnd-data:/root/.lnd  # NOOOOOOO!!!
-      - lnd-shared:/shared
-      - rtl-data:/data
     ports:
       - 3000:3000
+    volumes:
+      - rtl-data:/data
+      - lnd-data:/root/.lnd:ro
+    build:
+      # MANUAL STEP: our Dockerfile extends the rtl one, it needs to be built locally
+      # docker build -f dockerfiles/Dockerfile rtl. TODO: use their official image
+      context: lnd_dashboard
+    depends_on:
+      - lnd
+
+  # --- lndconnect utility -----------------------------------------------------
+  # Generate lightning QR code from the cli
+  #   https://medium.com/coinmonks/the-lightning-network-part-3-connecting-a-lightning-node-to-zap-from-your-mobile-phone-c49a424f4e69
+  # 
+  # See the /bin folder, nice integration with the underlying OS that spins
+  # this pod up on command 
+  # ----------------------------------------------------------------------------
+  lndconnect:
+    build: 
+      context: .
+      dockerfile: lndconnect/Dockerfile
+    volumes:
+      - lnd-data:/root/.lnd:ro
+
+  # --- Backend ----------------------------------------------------------------
+  # 
+  # Advanced Bitcoin blockchain parsing. Django project that utilizes the Bitcoin
+  # RPC API to process block, transaction data.  
+  #
+  # ----------------------------------------------------------------------------
+  backend:
+    build: ./backend
+    # command: ./manage.py runserver 0.0.0.0:8000
+    command: ./manage.py trans
+    volumes:
+      - ./backend:/code
     environment:
-      PORT: 3000
-      HOST: 0.0.0.0
-      MACAROON_PATH: /shared
-      LN_SERVER_URL: https://lnd:8080
-      CONFIG_PATH: ''
-      LN_IMPLEMENTATION: LND
-      SWAP_SERVER_URL: https://lnd:8081
-      SWAP_MACAROON_PATH: /shared
-      RTL_SSO: 0
-      RTL_COOKIE_PATH: ''
-      LOGOUT_REDIRECT_LINK: ''
-      RTL_CONFIG_PATH: /RTL
-      BITCOIND_CONFIG_PATH: ''
-      CHANNEL_BACKUP_PATH: /data/rtl_backups
-      THEME_MODE: NIGHT
-    
-  # --- Backend
-  # backend:
-  #   build: ./backend
-  #   # command: ./manage.py runserver 0.0.0.0:8000
-  #   command: ./manage.py trans
-  #   volumes:
-  #     - ./backend:/code
-  #   environment:
-  #     - BTD_RPC_USER
-  #     - BTD_RPC_PASSWORD
-  #   ports:
-  #     - 8000:8000
-  #   depends_on:
-  #     - bitcoind
-  #   extra_hosts:
-  #     - host.docker.internal:172.17.0.1
-  #   restart: always
+      - BTD_RPC_USER
+      - BTD_RPC_PASSWORD
+    ports:
+      - 8000:8000
+    depends_on:
+      - bitcoind
+    extra_hosts:
+      - host.docker.internal:172.17.0.1
+    restart: always
 
 # ------------------------------------------------------------------------------
 # Volumes
 # ------------------------------------------------------------------------------
 
 volumes:
+  tor-data:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /media/btcbigdisk/tor
   # Bitcoin core volume. It's large, so I mount an external 1TB drive
   bitcoind-data:
     driver: local
@@ -122,12 +159,6 @@ volumes:
       o: bind
       type: none
       device: /media/btcbigdisk/lnd
-  lnd-shared:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: /media/btcbigdisk/lnd-shared
   rtl-data:
     driver: local
     driver_opts:

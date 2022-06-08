@@ -48,4 +48,11 @@ RUN apt update \
 
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
-COPY bitcoin.conf /root/bitcoin.conf
+ARG TMP_DIR=/tmp
+
+# Pass args into env
+ENV TMP_DIR=$TMP_DIR
+
+# Injection
+COPY bitcoin.conf $TMP_DIR/bitcoin.conf
+COPY init /usr/local/bin/init

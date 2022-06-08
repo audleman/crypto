@@ -1,0 +1,32 @@
+{
+  "multiPassHashed": "932f3c1b56257ce8539ac269d7aab42550dacf8818d075f0bdf1990562aae3ef",
+  "host": "0.0.0.0",
+  "port": "3000",
+  "defaultNodeIndex": 1,
+  "SSO": {
+    "rtlSSO": 0,
+    "rtlCookiePath": "",
+    "logoutRedirectLink": ""
+  },
+  "nodes": [
+    {
+      "index": 1,
+      "lnNode": "Node 1",
+      "lnImplementation": "LND",
+      "Authentication": {
+        "macaroonPath": "/root/.lnd/data/chain/bitcoin/mainnet",
+        "configPath": "/root/.lnd/lnd.conf"
+      },
+      "Settings": {
+        "userPersona": "OPERATOR",
+        "themeMode": "NIGHT",
+        "themeColor": "YELLOW",
+        "channelBackupPath": "/data/backups",
+        "logLevel": "ERROR",
+        "lnServerUrl": "https://lnd:8080",
+        "fiatConversion": true,
+        "currencyUnit": "USD"
+      }
+    }
+  ]
+}

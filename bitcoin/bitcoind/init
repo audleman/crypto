@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+if [ -e /tmp/bitcoin.conf ]; then
+    echo "Installing bitcoin.conf"
+    mv /tmp/bitcoin.conf $HOME/.bitcoin/bitcoin.conf
+fi
+cat $HOME/.bitcoin/bitcoin.conf
+
+# Run 
+echo "-----------------------------------------------"
+echo "Launching bitcoind daemon"
+exec bitcoind "$@"

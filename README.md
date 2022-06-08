@@ -1,28 +1,21 @@
 Fun with crypto! My personal development around Bitcoin and Ethereum
 
 # Bitcoin
-Eyyy yooooo!! 
-bitcoin! This projects is composed of three components:
+A docker swarm of the following microservices:
 
-- A full Bitcoin node
-- Backend, written in Django
-- Frontent, written in react
+- Bitcoind - the bitcoin daemon
+- Lnd - official lightning daemon
+- RTL - a web dashboard for lightning
+- Backend - my personal sandbox, used for querying bitcoin blockchain and doing
+            interesting things with the results
 
 These run as docker containers and are orchestrated via docker-compose
 
 ## Setup
 
-1. Install docker
-2. Install docker-compose
+1. Base machine needs docker
+1. Source bash extensions in your .bash_profile
+1. Create `crypto/bitcoin/.secrets`
+    * Copy `crypto/bitcoin/.secrets.tmpl` and populate reasonable values
+3. Operate containers from `crypto/bitcoin/docker-compose.yaml`
 
-
-## Run
-Starts the bitcoin daemon, backend
-```
-$ cd crypto/bitcoin
-$ docker-compose up
-```
-
-# Ethereum
-
-Runs a light node, validator TBD
