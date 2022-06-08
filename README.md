@@ -1,13 +1,14 @@
-Fun with crypto! My personal development around Bitcoin and Ethereum
+My personal development around Bitcoin and Ethereum
 
 # Bitcoin
-A docker swarm of the following microservices:
 
-- Bitcoind - the bitcoin daemon
-- Lnd - official lightning daemon
-- RTL - a web dashboard for lightning
-- Backend - my personal sandbox, used for querying bitcoin blockchain and doing
-            interesting things with the results
+A container-orchestrated setup for running bitcoin + lightning
+
+- A full Bitcoin node, built from source
+- Backend, written in Django 
+- Lightning node
+- Ride the Lightning (RTL) admin interface for Lightning
+
 
 These run as docker containers and are orchestrated via docker-compose
 
