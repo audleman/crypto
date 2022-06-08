@@ -2,15 +2,15 @@
 #
 #  Bitcoin, Lightning Micro Cluster
 #
-#  This is a lightweight, easy to run bitcoin stack using Docker Compose. I
-#  chose compose for this project because:
-#   - Kubernetes is overkill for something this lightweight
+#  This is a lightweight, easy to run bitcoin stack using Docker Compose that I am using
+#  to run bitcoin, lightning, dashboards, CLI utilities, and advanced blockchain parsing on a 
+#  linux box in my closed.  I chose compose for this project because:
 #   - I wanted to expand my overall Docker / container knowledge
 #   - Docker Compose provides a brilliant locally networked environment for a small, static 
 #     set of hosted containers
-#   - Single command `docker-compose up` and the entire cluster is running, failsafe, and auditable
+#   - Kubernetes is overkill for something this lightweight
 #
-#   Benefits of this approach
+#   I found that Docker Compose has a nice set of attributes:
 #   - Isolated networking - almost all ports are constrained to the private, local
 #     docker network. For instance, the Bitcoin RPC port is not reachable from
 #     the web. This reduces the attack vector at the network level. 
@@ -25,7 +25,7 @@
 #   - Provides uptime via `restart: always`. A super simple process manager utilizing
 #     the underlying Docker technology
 #   - Nice process monitoring, e.g. tailing logs. See the `cli` folder for my integration
-#   - Volumes allow us to easily map external hard drives, necessary for hosting
+#   - Easy volume mapping - allows us to easily map external hard drives, necessary for hosting
 #     the blockchain. I've got a 1TB for the raw blockchain, and a 4TB drive for
 #     my blockchain exporer `backend` project. 
 # 
