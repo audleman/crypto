@@ -1,3 +1,10 @@
+# ----------------------------------------------------------------------------
+#
+#  Home Bitcoin+Lightning micro cluster
+#
+#
+# ----------------------------------------------------------------------------
+
 version: "3.9"
 
 # Grafana
@@ -16,13 +23,9 @@ services:
   tor:
     image: thetorproject/obfs4-bridge:latest
     environment:
-      # Exit with an error message if OR_PORT is unset or empty.
       - OR_PORT=${OR_PORT:?Env var OR_PORT is not set.}
-      # Exit with an error message if PT_PORT is unset or empty.
       - PT_PORT=${PT_PORT:?Env var PT_PORT is not set.}
-      # Exit with an error message if EMAIL is unset or empty.
       - EMAIL=${EMAIL:?Env var EMAIL is not set.}
-      # Nickname with default value: "DockerObfs4Bridge"
       - NICKNAME=${NICKNAME:-DockerObfs4Bridge}
     volumes:
       - tor-data:/var/lib/tor
