@@ -1,8 +1,27 @@
 # ----------------------------------------------------------------------------
 #
-#  Home Bitcoin+Lightning micro cluster
+#  Bitcoin, Lightning Micro Cluster
 #
+#  This is a lightweight, easy to run bitcoin stack using Docker Compose. I
+#  chose compose for this project because:
+#   - Kubernetes is overkill for something this lightweight
+#   - Docker compose provides nearly everything we need
+#   - I wanted to expand my overall container knowledge
+#   - Single command `docker-compose up` and the entire cluster is running
 #
+#   Benefits of this approach
+#   - Isolated networking - almost all ports are constrained to the private, local
+#     docker network. For instance, the Bitcoin RPC port is not reachable from
+#     the web. This reduces the attack vector significantly
+#   - Simple yet effective secret management - Secrets are defined in the `.env` file, and this compose
+#     file shares them between pods using environment variables. This:
+#       1. Prevents pods from needing to access the data folders of other pods (e.g. 
+#          Lightning has no access to the bitcoind data directory), minimizing attack vector
+#       2. Prevents the need to hard-code secrets in any Dockerfile, or duplicate them, copy them, etc. 
+#     This is perfect for a small home project, though ultimately too simple for production.
+#     A more robust system would use Hashicorp Vault, AWS Key Management, or hop to Kubernetes
+#     for its integrated solution
+# 
 # ----------------------------------------------------------------------------
 
 version: "3.9"
@@ -33,6 +52,7 @@ services:
       - ${PT_PORT}:${PT_PORT}
     # restart: always
 
+
   # ----------------------------------------------------------------------------
   #   Bitcoin daemon 
   #
@@ -59,6 +79,7 @@ services:
         VERSION: ${BTD_VERSION}
     restart: always
       
+
   # ----------------------------------------------------------------------------
   #   Lightning
   #     Builds lnd from source using their Dockerfile
@@ -84,6 +105,7 @@ services:
     depends_on:
       - bitcoind
 
+
   # ----------------------------------------------------------------------------
   #   Ride The Lightning - lightning dashboard 
   #     Nice admin interface for my lightning node
@@ -102,6 +124,7 @@ services:
     depends_on:
       - lnd
 
+
   # ----------------------------------------------------------------------------
   #   lndconnect utility
   #     Generate lightning QR code from the cli
@@ -116,6 +139,7 @@ services:
       dockerfile: lndconnect/Dockerfile
     volumes:
       - lnd-data:/root/.lnd:ro
+
 
   # ----------------------------------------------------------------------------
   #   Backend
@@ -139,6 +163,7 @@ services:
     extra_hosts:
       - host.docker.internal:172.17.0.1
     restart: always
+
 
 volumes:
   tor-data:
