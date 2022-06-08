@@ -4,7 +4,7 @@
 #
 #  This is a lightweight, easy to run bitcoin stack using Docker Compose that I am using
 #  to run bitcoin, lightning, dashboards, CLI utilities, and advanced blockchain parsing on a 
-#  linux box in my closed.  I chose compose for this project because:
+#  linux box in my closet.  I chose compose for this project because:
 #   - I wanted to expand my overall Docker / container knowledge
 #   - Docker Compose provides a brilliant locally networked environment for a small, static 
 #     set of hosted containers
