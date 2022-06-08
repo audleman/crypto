@@ -43,7 +43,6 @@ services:
   #
   #   WIP - hide everything behind a TOR relay node 
   #   https://stopanddecrypt.medium.com/running-bitcoin-lightning-nodes-over-the-tor-network-2021-edition-489180297d5
-  #
   # ----------------------------------------------------------------------------
   tor:
     image: thetorproject/obfs4-bridge:latest
@@ -91,7 +90,6 @@ services:
   #   Lightning
   #     Builds lnd from source using their Dockerfile
   #     https://github.com/lightningnetwork/lnd
-  # 
   # ----------------------------------------------------------------------------
   lnd:
     command: [
@@ -152,7 +150,6 @@ services:
   #   Backend
   #     Advanced Bitcoin blockchain parsing. Django project that utilizes the Bitcoin
   #     RPC API to process block, transaction data.  
-  #
   # ----------------------------------------------------------------------------
   backend:
     build: ./backend
