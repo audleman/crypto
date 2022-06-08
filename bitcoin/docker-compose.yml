@@ -61,9 +61,8 @@ services:
 
   # ----------------------------------------------------------------------------
   #   Bitcoin daemon 
-  #
-  #   Full Bitcoin node. Wrote my own Dockerfile that downloads from
-  #   Github and builds from source. 
+  #     Full Bitcoin node. Wrote my own Dockerfile that downloads from
+  #     Github and builds from source. 
   # ----------------------------------------------------------------------------
   bitcoind:
     command: [
